@@ -1,32 +1,39 @@
-from .calculator import DFTK
-
-__all__ = ["DFTK", "install"]
-
 __version__ = "0.1.0"
 __license__ = "MIT"
 __author__ = ["Michael F. Herbst"]
 
-
-def register_ase_plugin():
-    from ase.calculators.calculator import register_calculator_class
-
-    register_calculator_class("DFTK", DFTK)
+# TODO check and ensure a compatible DFTK version is installed.
 
 
-def install():
+def has_julia():
+    import julia
+
+    try:
+        from julia import Main
+
+        return Main.eval("true")
+    except julia.core.UnsupportedPythonError:
+        return False
+
+
+__all__ = ["install"]
+if has_julia():
+    from .calculator import DFTK
+
+    __all__ = ["install", "DFTK"]
+
+
+def install(*args, **kwargs):
     import julia
 
     try:
         from julia import Pkg
     except julia.core.UnsupportedPythonError:
-        julia.install()
+        julia.install(*args, **kwargs)
 
     from julia import Pkg  # noqa: F811
 
     try:
-        from julia import DFTK  # noqa: F401
+        from julia import DFTK as jl_dftk  # noqa: F401
     except ImportError:
         Pkg.install("DFTK")
-
-
-register_ase_plugin()
