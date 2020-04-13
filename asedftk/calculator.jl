@@ -1,9 +1,10 @@
+module asedftk
 using PyCall
 import DFTK: PlaneWaveBasis, Model, self_consistent_field, load_psp
 import DFTK: load_lattice, load_atoms, ElementPsp, model_DFT, forces
+
 ase_units = pyimport("ase.units")
 calculator = pyimport("ase.calculators.calculator")
-
 
 #    self.label         contains place where results are written to
 #    self.parameters    calculational parameters
@@ -105,4 +106,6 @@ calculator = pyimport("ase.calculators.calculator")
         # TODO Write results to disk
         self.results = results
     end
+end
+
 end
