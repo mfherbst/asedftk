@@ -2,9 +2,11 @@ from setuptools import setup
 
 __version__ = "0.1.0"
 
+
 def readme():
     with open('README.md') as f:
         return f.read()
+
 
 setup(
     name='ase-dftk',
@@ -36,6 +38,6 @@ setup(
     #
     packages=["asedftk"],
     python_requires=">=3.6",
-    install_requires=["ase>=3", "julia>=0.5"],
+    install_requires=["ase>=3", "julia>=0.5", "numpy>=1.14"],
     zip_safe=False,
 )

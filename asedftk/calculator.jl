@@ -99,10 +99,10 @@ calculator = pyimport("ase.calculators.calculator")
 
         # Parse psp and DFT functional parameters
         functionals = [:lda_xc_teter93]
-        if self.parameters["xc"] == "LDA"
+        if lowercase(self.parameters["xc"]) == "lda"
             psp_functional = "lda"
             functionals = [:lda_xc_teter93]
-        elseif self.parameters["xc"] == "pbe"
+        elseif lowercase(self.parameters["xc"]) == "pbe"
             psp_functional = "pbe"
             functionals = [:gga_x_pbe, :gga_c_pbe]
         else
@@ -208,8 +208,8 @@ calculator = pyimport("ase.calculators.calculator")
             extraargs = (n_bands=self.parameters["nbands"], )
         end
         try
-            self_consistent_field(basis; tol=self.parameters["scftol"],
-                                  callback=info -> (), extraargs...)
+            tol = self.parameters["scftol"]  # TODO Maybe unit conversion here!
+            self_consistent_field(basis; tol=tol, callback=info -> (), extraargs...)
         catch e
             pyraise(calculator.SCFError(string(e)))
         end
@@ -252,7 +252,8 @@ calculator = pyimport("ase.calculators.calculator")
         if "forces" in properties
             # TODO If the calculation fails, ASE expects an
             #      calculator.CalculationFailed exception
-            results["forces"] = forces(scfres) * (ase_units.Hartree / ase_units.Bohr)
+            fvalues = hcat((Array(d) for fatom in forces(scfres) for d in fatom)...)'
+            results["forces"] = fvalues * (ase_units.Hartree / ase_units.Bohr)
         end
 
         # Commit results and dump them to disk:

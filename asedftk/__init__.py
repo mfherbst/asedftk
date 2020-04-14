@@ -8,7 +8,7 @@ __author__ = ["Michael F. Herbst"]
 COMPATIBLE_DFTK = ["0.0.6"]
 
 
-def has_julia():
+def check_julia():
     """
     Is the 'julia' python package working properly?
     """
@@ -18,8 +18,10 @@ def has_julia():
         from julia import Main
 
         return Main.eval("true")
-    except julia.core.UnsupportedPythonError:
-        return False
+    except julia.core.UnsupportedPythonError as e:
+        string = ("\n\nIssues between python and Julia. Try to resolve by installing "
+                  "required Julia packages using 'asedftk.install()'")
+        warnings.warn(e + string)
 
 
 def dftk_version():
@@ -60,7 +62,7 @@ def install(*args, **kwargs):
 
 
 __all__ = ["install", "dftk_version"]
-if not has_julia():
+if not check_julia():
     warnings.warn("Julia not found. Try to install Julia requirements "
                   "using 'asedftk.install()'")
 elif not has_compatible_dftk():
