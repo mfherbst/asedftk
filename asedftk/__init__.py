@@ -1,6 +1,6 @@
 import warnings
 
-__version__ = "0.1.0"
+__version__ = "0.0.0"
 __license__ = "MIT"
 __author__ = ["Michael F. Herbst"]
 
@@ -53,11 +53,10 @@ def install(*args, **kwargs):
 
     julia.install(*args, **kwargs)
 
-    from julia import Pkg  # noqa: F811
-
     try:
         from julia import DFTK as jl_dftk  # noqa: F401
     except ImportError:
+        from julia import Pkg  # noqa: F811
         Pkg.install("DFTK@" + COMPATIBLE_DFTK[-1])
 
 
