@@ -16,7 +16,7 @@ setup(
     keywords=[
         "density-functional", "theory", "DFT", "computational", "chemistry",
         "quantum", "materials", "science", "electronic", "structure", "ab-initio",
-        "pseudopotential", "analysis", "ASE",
+        "pseudopotential", "analysis", "ASE", "DFTK"
     ],
     #
     author="Michael F. Herbst",

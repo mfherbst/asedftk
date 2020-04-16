@@ -20,8 +20,9 @@ def check_julia():
         return Main.eval("true")
     except julia.core.UnsupportedPythonError as e:
         string = ("\n\nIssues between python and Julia. Try to resolve by installing "
-                  "required Julia packages using 'asedftk.install()'")
-        warnings.warn(e + string)
+                  "required Julia packages using\n"
+                  '    python -m "import asedftk; asedftk.install()"')
+        warnings.warn(str(e) + string)
 
 
 def dftk_version():
@@ -54,10 +55,14 @@ def install(*args, **kwargs):
     julia.install(*args, **kwargs)
 
     try:
-        from julia import DFTK as jl_dftk  # noqa: F401
+        from julia import DFTK as jl_dftk, JSON  # noqa: F401
     except ImportError:
         from julia import Pkg  # noqa: F811
-        Pkg.install("DFTK@" + COMPATIBLE_DFTK[-1])
+
+        Pkg.add("JSON")
+        Pkg.Registry.add(Pkg.RegistrySpec(
+            url="https://github.com/JuliaMolSim/MolSim.git"))
+        Pkg.add(Pkg.PackageSpec(name="DFTK", version=COMPATIBLE_DFTK[-1]))
 
 
 __all__ = ["install", "dftk_version"]
