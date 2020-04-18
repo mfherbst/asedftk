@@ -1,4 +1,4 @@
-# ASE-compatible calculator for DFTK
+# DFTK-based calculator for ASE
 [![Documentation](https://img.shields.io/badge/doc-latest-blue.svg)](https://github.com/mfherbst/asedftk/blob/master/docs/asedftk.md)
 [![gitter](https://badges.gitter.im/DFTK-jl/community.svg)](https://gitter.im/DFTK-jl/community)
 [![license](https://img.shields.io/github/license/mfherbst/asedftk.svg?maxAge=2592000)](https://github.com/mfherbst/asedftk/blob/master/LICENSE)
@@ -8,8 +8,8 @@ Small wrapper around the
 [**density-functional toolkit (DFTK)**](https://dftk.org)
 to provide a
 [calculator interface](https://wiki.fysik.dtu.dk/ase/ase/calculators/calculators.html)
-compatible with the
-[atomistic simulation environment (ASE)](https://wiki.fysik.dtu.dk/ase/index.html).
+compatible with [ASE](https://wiki.fysik.dtu.dk/ase/index.html),
+the atomistic simulation environment.
 
 DFTK is a small library of Julia algorithms
 for experimentation with plane-wave-based
