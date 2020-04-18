@@ -1,0 +1,47 @@
+language: python
+cache:
+  directories:
+    - "$HOME/.cache/pip"
+    - "$HOME/.julia/artifacts"
+
+notifications:
+  email: false
+
+branches:
+  only:
+    # Only build master and version tags
+    - master
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+
+env:
+  global:
+    - JULIA_NUM_THREADS=2
+
+install:
+  - bash .ci/get_julia.sh
+  - travis_retry pip3 install -r requirements.txt
+  - travis_retry pip3 install pytest pytest-cov
+  - python3 -c "import asedftk; asedftk.install()"
+
+script:
+  # - export JULIA_ENABLE_COVERAGE=1
+  - python-jl -m pytest
+
+jobs:
+  include:
+    - stage: test
+      env: BUILD_SDIST=true
+      python: 3.6
+    - os: osx
+      language: ruby
+
+# deploy:  # Note: This will only deploy sdist on linux!
+#   skip_cleanup: true
+#   provider: pypi
+#   user: "__token__"
+#   password:
+#     secure: abc
+#   on:
+#     tags: true
+#     all_branches: true
+#     condition: "$BUILD_SDIST == true"

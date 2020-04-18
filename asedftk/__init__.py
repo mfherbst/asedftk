@@ -1,6 +1,6 @@
 import warnings
 
-__version__ = "0.1.0"
+__version__ = "0.0.0"
 __license__ = "MIT"
 __author__ = ["Michael F. Herbst"]
 
@@ -17,11 +17,16 @@ def check_julia():
     try:
         from julia import Main
 
-        return Main.eval("true")
+        julia_compatible = Main.eval('VERSION >= v"1.3.0"')
+        if not julia_compatible:
+            raise ImportError("Your Julia version is too old. "
+                              "At least 1.3.0 required")
+        return julia_compatible
     except julia.core.UnsupportedPythonError as e:
         string = ("\n\nIssues between python and Julia. Try to resolve by installing "
-                  "required Julia packages using 'asedftk.install()'")
-        warnings.warn(e + string)
+                  "required Julia packages using\n"
+                  '    python -m "import asedftk; asedftk.install()"')
+        warnings.warn(str(e) + string)
 
 
 def dftk_version():
@@ -30,10 +35,15 @@ def dftk_version():
     """
     from julia import Main, Pkg  # noqa: F811, F401
 
-    return Main.eval('''
-        string([package.version for (uuid, package) in Pkg.dependencies()
-                if package.name == "DFTK"][end])
-    ''')
+    if Main.eval('VERSION >= v"1.4.0"'):
+        return Main.eval('''
+            string([package.version for (uuid, package) in Pkg.dependencies()
+                    if package.name == "DFTK"][end])
+        ''')
+    else:
+        warnings.warn("Cannot determine DFTK version if using Julia < 1.4.0. "
+                      "Hoping for the best ...")
+        return COMPATIBLE_DFTK[-1]
 
 
 def has_compatible_dftk():
@@ -53,12 +63,15 @@ def install(*args, **kwargs):
 
     julia.install(*args, **kwargs)
 
-    from julia import Pkg  # noqa: F811
-
     try:
-        from julia import DFTK as jl_dftk  # noqa: F401
+        from julia import DFTK as jl_dftk, JSON  # noqa: F401
     except ImportError:
-        Pkg.install("DFTK@" + COMPATIBLE_DFTK[-1])
+        from julia import Pkg  # noqa: F811
+
+        Pkg.add("JSON")
+        Pkg.Registry.add(Pkg.RegistrySpec(
+            url="https://github.com/JuliaMolSim/MolSim.git"))
+        Pkg.add(Pkg.PackageSpec(name="DFTK", version=COMPATIBLE_DFTK[-1]))
 
 
 __all__ = ["install", "dftk_version"]

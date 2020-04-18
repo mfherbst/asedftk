@@ -10,13 +10,13 @@ def readme():
 
 setup(
     name='ase-dftk',
-    description='DFTK plugin for ASE',
+    description='DFTK calculator plugin for ASE',
     long_description=readme(),
     long_description_content_type="text/markdown",
     keywords=[
         "density-functional", "theory", "DFT", "computational", "chemistry",
         "quantum", "materials", "science", "electronic", "structure", "ab-initio",
-        "pseudopotential", "analysis",
+        "pseudopotential", "analysis", "ASE", "DFTK"
     ],
     #
     author="Michael F. Herbst",
@@ -37,7 +37,12 @@ setup(
     ],
     #
     packages=["asedftk"],
-    python_requires=">=3.6",
-    install_requires=["ase>=3", "julia>=0.5", "numpy>=1.14"],
     zip_safe=False,
+    python_requires=">=3.6",
+    install_requires=[
+        "ase>=3",
+        "julia>=0.5",
+        "numpy>=1.14",
+        "pymatgen>=2019.9.16"
+    ],
 )
