@@ -21,28 +21,27 @@ in the field. See [dftk.org](https://dftk.org) for more details.
 
 ## Installation
 1. Install Julia e.g. by [downloading the binary](https://julialang.org/downloads).
-   The use of **Julia 1.4** is required.  
+   The use of at least **Julia 1.4** is required.
    It is highly recommended you do this **before** installing asedftk.
-2. Install asedftk via pip:
+2. Install asedftk from [PyPi](https://pypi.org/project/asedftk):
    ```
    pip install asedftk
    ```
    This will also install the [PyJulia](https://pypi.org/project/julia/) package,
-   which allows Julia and Python code to interoperate.
+   which allows Julia and Python to interoperate.
 3. Install Julia dependencies:
    ```
    python-jl -c "import asedftk; asedftk.install()"
    ```
    **Note:** The use of `python-jl` instead of a plain `python`
-   is deliberate here
+   is on purpose
    to [work around some limitations](https://pyjulia.readthedocs.io/en/stable/troubleshooting.html#your-python-interpreter-is-statically-linked-to-libpython)
-   present in certain Linux distros like Debian or Ubuntu.
+   present in some Linux distros like Debian or Ubuntu.
 
 ## Basic usage
-asedftk exports an ASE-compatible calculator in `asedftk.DFTK`.
-Just use it like any other
+`asedftk.DFTK` is basically a class wrapping around DFTK and making it an
 [ASE calculator](https://wiki.fysik.dtu.dk/ase/ase/calculators/calculators.html).
-For example:
+Just use it like any other. For example:
 ```python
 from asedftk import DFTK
 from ase.build import bulk
