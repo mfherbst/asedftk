@@ -17,7 +17,11 @@ def check_julia():
     try:
         from julia import Main
 
-        return Main.eval("true")
+        julia_compatible = Main.eval('VERSION >= v"1.3.0"')
+        if not julia_compatible:
+            raise ImportError("Your Julia version is too old. "
+                              "At least 1.3.0 required")
+        return julia_compatible
     except julia.core.UnsupportedPythonError as e:
         string = ("\n\nIssues between python and Julia. Try to resolve by installing "
                   "required Julia packages using\n"
@@ -31,10 +35,15 @@ def dftk_version():
     """
     from julia import Main, Pkg  # noqa: F811, F401
 
-    return Main.eval('''
-        string([package.version for (uuid, package) in Pkg.dependencies()
-                if package.name == "DFTK"][end])
-    ''')
+    if Main.eval('VERSION >= v"1.4.0"'):
+        return Main.eval('''
+            string([package.version for (uuid, package) in Pkg.dependencies()
+                    if package.name == "DFTK"][end])
+        ''')
+    else:
+        warnings.warn("Cannot determine DFTK version if using Julia < 1.4.0. "
+                      "Hoping for the best ...")
+        return COMPATIBLE_DFTK[-1]
 
 
 def has_compatible_dftk():
