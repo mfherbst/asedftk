@@ -1,0 +1,4 @@
+include asedftk/*.py
+include asedftk/*.jl
+include README.md
+include LICENSE

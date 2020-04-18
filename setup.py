@@ -1,6 +1,6 @@
 from setuptools import setup
 
-__version__ = "0.1.0"
+__version__ = "0.0.0"
 
 
 def readme():
@@ -10,7 +10,7 @@ def readme():
 
 setup(
     name='ase-dftk',
-    description='DFTK calculator plugin for ASE',
+    description='ASE-compatible calculator for DFTK',
     long_description=readme(),
     long_description_content_type="text/markdown",
     keywords=[
