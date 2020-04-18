@@ -1,14 +1,17 @@
 module asedftk
 using PyCall
+using LinearAlgebra
 import JSON
 import DFTK: PlaneWaveBasis, Model, self_consistent_field, load_psp
 import DFTK: load_lattice, load_atoms, ElementPsp, model_DFT, forces
-import DFTK: Smearing, kgrid_size_from_minimal_spacing
+import DFTK: Smearing, kgrid_size_from_minimal_spacing, Vec3, Mat3
 
 ase_units = pyimport("ase.units")
 ase_io = pyimport("ase.io")
 calculator = pyimport("ase.calculators.calculator")
 
+# Raise an InputError exception
+inputerror(s) = pyraise(calculator.InputError(s))
 
 # Discussion of valid parameters:
 #
@@ -23,7 +26,7 @@ calculator = pyimport("ase.calculators.calculator")
 #
 
 @pydef mutable struct DFTK <: calculator.Calculator
-    implemented_properties = ["energy", "free_energy", "forces"]
+    implemented_properties = ["energy", "forces"]
 
     function __init__(self; atoms=nothing, label="dftk", kwargs...)
         self.default_parameters = Dict{String,Any}(
@@ -61,6 +64,43 @@ calculator = pyimport("ase.calculators.calculator")
         self.scfres = nothing  # Discard any cached results
     end
 
+    function write(self, label=self.label)
+        if isnothing(self.atoms)
+            pyraise(calculator.CalculatorSetupError("An Atoms object must be present " *
+                                                    "in the calculator to use write"))
+        end
+
+        # Convert atoms to json
+        atoms_json = ""
+        @pywith pyimport("io").StringIO() as f begin
+            ase_io.write(f, self.atoms.copy(), format="json")
+            atoms_json = f.getvalue()
+        end
+
+        # Transpose arrays inside results, such that they are written
+        # in a predictable order to disk
+        results = Dict{String, Any}()
+        for (key, val) in pairs(self.results)
+            if val isa AbstractArray
+                if ndims(val) == 2
+                    results[key] = collect(eachrow(val))
+                    continue
+                elseif ndims(val) > 2
+                    error("Arrays of dimension larger 2 not supported")
+                end
+            end
+            results[key] = val
+        end
+        open(label * ".json", "w") do fp
+            save_dict = Dict(
+                "parameters" => self.parameters,
+                "results" => results,
+                "atoms" => atoms_json,
+            )
+            JSON.print(fp, save_dict)
+        end
+    end
+
     function set(self; kwargs...)
         changed_parameters = calculator.Calculator.set(self; kwargs...)
         if !isempty(changed_parameters)
@@ -88,14 +128,12 @@ calculator = pyimport("ase.calculators.calculator")
     end
 
     function get_dftk_model(self)
-        inputerror(s) = pyraise(calculator.InputError(s))
         inputerror_param(param) = inputerror("Unknown value to $param: " *
                                              "$(self.parameters[param])")
         if isnothing(self.atoms)
             pyraise(calculator.CalculatorSetupError("An Atoms object must be provided to " *
                                                     "perform a calculation"))
         end
-
 
         # Parse psp and DFT functional parameters
         functionals = [:lda_xc_teter93]
@@ -134,18 +172,18 @@ calculator = pyimport("ase.calculators.calculator")
         if !isnothing(self.parameters["smearing"])
             psmear = self.parameters["smearing"]
             if lowercase(psmear[1]) == "fermi-dirac"
-                smearing = DFTK.Smearing.FermiDirac()
+                smearing = Smearing.FermiDirac()
             elseif lowercase(psmear[1]) == "gaussian"
-                smearing = DFTK.Smearing.Gaussian()
+                smearing = Smearing.Gaussian()
             elseif lowercase(psmear[1]) == "methfessel-paxton"
-                # This if can go in the next DFTK version
+                # TODO This if can go in the next DFTK version
                 # because it will be built into DFTK
                 if psmear[3] == 0
-                    smearing = Gaussian()
+                    smearing = Smearing.Gaussian()
                 elseif psmear[3] == 1
-                    smearing = MethfesselPaxton1()
+                    smearing = Smearing.MethfesselPaxton1()
                 elseif psmear[3] == 2
-                    smearing = MethfesselPaxton2()
+                    smearing = Smearing.MethfesselPaxton2()
                 else
                     inputerror("Methfessel-Paxton smearing beyond order 2 not " *
                                "implemented in DFTK.")
@@ -153,7 +191,7 @@ calculator = pyimport("ase.calculators.calculator")
             else
                 inputerror_param("smearing")
             end
-            temperature = psmear[2] / ase_units.Hartree
+            temperature = convert(Float64, psmear[2] / ase_units.Hartree)
         end
 
         if self.parameters["charge"] != 0.0
@@ -175,31 +213,36 @@ calculator = pyimport("ase.calculators.calculator")
     end
 
     function get_dftk_basis(self; model=self.get_dftk_model())
-        inputerror(s) = pyraise(calculator.InputError(s))
-        inputerror_param(param) = inputerror("Unknown value to $param: " *
-                                             "$(self.parameters[param])")
 
         # Build kpoint mesh
         kpts = self.parameters["kpts"]
         kgrid = [1, 1, 1]
         if kpts isa Number
-            kgrid = kgrid_size_from_minimal_spacing(model.lattice, kpts / ase_units.Bohr)
+            kgrid = kgrid_size_from_minimal_spacing(model.lattice, kpts * ase_units.Bohr)
         elseif length(kpts) == 3 && all(kpt isa Number for kpt in kpts)
             kgrid = kpts  # Just a plain MP grid
         elseif length(kpts) == 4 && all(kpt isa Number for kpt in kpts[1:3])
+            kpts[4] != "gamma" && inputerror("Unknown value to kpts: $kpts")
+
             # MP grid shifted to always contain Gamma
-            if kpts[4] == "gamma"
-                inputerror("Shifted Monkhorst-Pack grids not supported by DFTK.")
+            if all(isodd, kpts[1:3])
+                kgrid = kpts[1:3]
             else
-                inputerror_param("kpts")
+                inputerror("Shifted Monkhorst-Pack grids not yet supported in DFTK.")
             end
         elseif kpts isa AbstractArray
-            inputerror("Explicit kpoint list not yet supported by DFTK calculator.")
+            kgrid = nothing
+            kcoords = [Vec3(kpt...) for kpt in kpts]
+            ksymops = [[(Mat3{Int}(I), Vec3(zeros(3)))] for _ in 1:length(kcoords)]
         end
 
         # Convert ecut to Hartree
         Ecut = self.parameters["ecut"] / ase_units.Hartree
-        PlaneWaveBasis(model, Ecut, kgrid=kgrid)
+        if isnothing(kgrid)
+            PlaneWaveBasis(model, Ecut, kcoords, ksymops)
+        else
+            PlaneWaveBasis(model, Ecut, kgrid=kgrid)
+        end
     end
 
     function get_dftk_scfres(self; basis=self.get_dftk_basis())
@@ -212,29 +255,6 @@ calculator = pyimport("ase.calculators.calculator")
             self_consistent_field(basis; tol=tol, callback=info -> (), extraargs...)
         catch e
             pyraise(calculator.SCFError(string(e)))
-        end
-    end
-
-    function write(self, label=self.label)
-        if isnothing(self.atoms)
-            pyraise(calculator.CalculatorSetupError("An Atoms object must be present " *
-                                                    "in the calculator to use write"))
-        end
-
-        # Convert atoms to json
-        atoms_json = ""
-        @pywith pyimport("io").StringIO() as f begin
-            ase_io.write(f, self.atoms.copy(), format="json")
-            atoms_json = f.getvalue()
-        end
-
-        open(label * ".json", "w") do fp
-            save_dict = Dict(
-                "parameters" => self.parameters,
-                "results" => self.results,
-                "atoms" => atoms_json,
-            )
-            JSON.print(fp, save_dict)
         end
     end
 

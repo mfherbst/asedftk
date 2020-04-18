@@ -28,3 +28,6 @@ Tips and tricks:
   JULIA_NUM_THREADS=$NCPUS
   ```
 - `python-jl` instead of actual python
+
+
+See [documentation](docs/asedftk.md).
