@@ -131,8 +131,8 @@ end
     silicon = bulk("Si")
     silicon.calc = asedftk.DFTK(;xc="PBE", kpts=(3, 3, 3), ecut=190, scftol=1e-4,
                                 nbands=12, label=label)
-    @test silicon.get_potential_energy() ≈ ENERGY_PBE atol=1e-4
-    @test silicon.get_forces() ≈ FORCES_PBE atol=5e-3
+    @test silicon.get_potential_energy() ≈ ENERGY_PBE atol=1e-4 rtol=1e-4
+    @test silicon.get_forces() ≈ FORCES_PBE atol=5e-3 rtol=1e-3
     @test length(silicon.calc.scfres.eigenvalues[1]) ≥ 12
 
     # Read resultsfile again:
@@ -143,8 +143,8 @@ end
     @test silicon.calc.parameters["xc"] == "PBE"
     @test silicon.calc.parameters["kpts"] == [3, 3, 3]
     @test silicon.calc.parameters["ecut"] == 190
-    @test silicon.calc.results["energy"] ≈ ENERGY_PBE atol=1e-4
-    @test silicon.calc.results["forces"] ≈ FORCES_PBE atol=3e-5
+    @test silicon.calc.results["energy"] ≈ ENERGY_PBE atol=1e-4 rtol=1e-4
+    @test silicon.calc.results["forces"] ≈ FORCES_PBE atol=3e-5 rtol=1e-3
 
     # Test some invariances
     @test silicon == asedftk.DFTK.read_atoms(label)
