@@ -22,14 +22,14 @@ in the field. See [dftk.org](https://dftk.org) for more details.
 ## Installation
 1. Install Julia e.g. by [downloading the binary](https://julialang.org/downloads).
    The use of at least **Julia 1.4** is required.
-   It is highly recommended you do this **before** installing asedftk.
+   It is highly recommended you do this *before* installing asedftk.
 2. Install asedftk from [PyPi](https://pypi.org/project/asedftk):
    ```
    pip install asedftk
    ```
-   This will also install the [PyJulia](https://pypi.org/project/julia/) package,
-   which allows Julia and Python to interoperate.
-3. Install Julia dependencies:
+   This automatically installs the [PyJulia](https://pypi.org/project/julia/) package,
+   which allows Julia and Python codes to interoperate with each other.
+3. Install the Julia dependencies of asedftk:
    ```
    python-jl -c "import asedftk; asedftk.install()"
    ```
@@ -37,6 +37,12 @@ in the field. See [dftk.org](https://dftk.org) for more details.
    is on purpose
    to [work around some limitations](https://pyjulia.readthedocs.io/en/stable/troubleshooting.html#your-python-interpreter-is-statically-linked-to-libpython)
    present in some Linux distros like Debian or Ubuntu.
+4. That's it, you're all set. But before you get going, please note:
+   The limitation mentioned above
+   implies that you might also need to run your Python scripts
+   with the `python-jl` wrapper if you want to use asedftk in them.
+   I.e. if you have written a calculation script `script.py` you
+   need to start it as `python-jl script.py`.
 
 ## Basic usage
 `asedftk.DFTK` is basically a class wrapping around DFTK and making it an
@@ -50,8 +56,5 @@ atoms = bulk("Si")
 atoms.calc = DFTK()
 print(atoms.get_potential_energy())
 ```
-Keep in mind that in order to use this you might again need
-to call this script with the `python-jl` wrapper
-instead of just using `python` as usual.
 
-More details can be found in the [asedftk documentation](https://github.com/mfherbst/asedftk/blob/master/docs/asedftk.md)
+More details can be found in the [asedftk documentation](https://github.com/mfherbst/asedftk/blob/master/docs/asedftk.md).
