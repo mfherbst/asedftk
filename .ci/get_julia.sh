@@ -8,7 +8,6 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
 	export HOMEBREW_NO_INSTALL_CLEANUP=1
 	export HOMEBREW_NO_AUTO_UPDATE=1
 	brew cask install julia
-	JULIAPATH=/usr/local/bin/julia
 else
 	mkdir -p "$HOME/julia_binary"
 	pushd "$HOME/julia_binary"
@@ -23,17 +22,10 @@ else
 	tar xzf julia.tar.gz
 	JULIAPATH=$(echo $PWD/julia-*/bin)/julia
 	echo "Installed julia to $JULIAPATH"
+	popd
 
+	pushd "$HOME/bin"
+	ln -s $JULIAPATH julia
 	popd
 fi
 
-mkdir -p $HOME/bin
-cat > "$HOME/bin/julia" <<- EOF
-	#!/bin/bash
-	if [ "JULIA_ENABLE_COVERAGE" ]; then
-		$JULIAPATH --code-coverage "\$@"
-	else
-		$JULIAPATH "\$@"
-	fi
-EOF
-chmod 755 $HOME/bin/julia

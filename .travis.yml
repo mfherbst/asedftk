@@ -20,7 +20,7 @@ env:
 install:
   - bash .ci/get_julia.sh
   - travis_retry pip3 install -r requirements.txt
-  - travis_retry pip3 install pytest pytest-cov
+  - travis_retry pip3 install pytest
   - python3 -c "import asedftk; asedftk.install()"
 
 script:
