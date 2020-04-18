@@ -10,7 +10,7 @@ def readme():
 
 setup(
     name='asedftk',
-    description='ASE-compatible calculator for DFTK',
+    description='DFTK-based calculator for ASE',
     long_description=readme(),
     long_description_content_type="text/markdown",
     keywords=[

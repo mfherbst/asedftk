@@ -38,13 +38,13 @@ jobs:
     - os: osx
       language: ruby
 
-# deploy:  # Note: This will only deploy sdist on linux!
-#   skip_cleanup: true
-#   provider: pypi
-#   user: "__token__"
-#   password:
-#     secure: abc
-#   on:
-#     tags: true
-#     all_branches: true
-#     condition: "$BUILD_SDIST == true"
+deploy:  # Note: This will only deploy sdist on linux!
+  skip_cleanup: true
+  provider: pypi
+  user: "__token__"
+  password:
+    secure: "YHHT3QxbbMoJIlpCNsTRmY4YWA9rrbS/Mer8E5LoJlJCaduqDdLZp8A5ZKU/RgDH6VJz3FSGkeXe/UEhoRODr3iNnVT/9hkP+x1dFpvSvD6pb8B3d5sMXAj9+H2Idzp97mG2zSNIdOmwTUPL1mwnHWG1HiuQnnvMYAtp6mDx6GhUW8bxduZBCAy8s5+pRyLbstFCX8XhulNuwHa/ZAvSPe+ZgurUbG9xQihUFMNYYQmIVY2VT4h+xKfHT6JuVVBdJICjK/Dn+PcNLdXNESTW428lCrYx6/tmSxNueq2kG2WsLKnNtfsIJn6bvdtQ6X4w/AIsLtQxFSPyU3Ws8reSVO9bMb7AxnFEN9u7KilZ76xDtyOtRU/Z9btmaYgFXGRDJs8eZfkuE6/TsaUK44ioBhjodWd5dnhvstVCndc+fvf2XNnT5Sg2ZC0xCObaU7BNApRjSMnPiPbTcYDXw/aVdG9sMMTKaJblv403XeBwh0FQ+vCyT4fZpku1Xe6XrMtDsDnAI1Yz+Rkl6KnYfWs5dpLqgWxVBtLTOgJpBQ5hmuBlpMY8W23tqdzSlTqgT+gu6nDaO+6h7o0k/hMofvquzHWjlHjaA4JBVv8fX0rhYO6tU94noABgbc6c/4PYQFE6YgOheqxyY1OCL7VR/QXJN8/uY1lL0YVpOELUTl3XSBo="
+  on:
+    tags: true
+    all_branches: true
+    condition: "$BUILD_SDIST == true"
