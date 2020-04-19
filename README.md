@@ -31,17 +31,16 @@ in the field. See [dftk.org](https://dftk.org) for more details.
    which allows Julia and Python codes to interoperate with each other.
 3. Install the Julia dependencies of asedftk:
    ```
-   python-jl -c "import asedftk; asedftk.install()"
+   python3 -c "import asedftk; asedftk.install()"
    ```
-   **Note** the use of `python-jl` instead of a plain `python`
-   to [work around some limitations](https://pyjulia.readthedocs.io/en/stable/troubleshooting.html#your-python-interpreter-is-statically-linked-to-libpython)
-   present in some Linux distros like Debian or Ubuntu.
-4. That's it, you're all set. But please note:
-   The limitation mentioned above
-   implies that you might also need to run your Python scripts
+4. That's it, you're all set. But **please note**:
+   Due to [some limitations](https://pyjulia.readthedocs.io/en/stable/troubleshooting.html#your-python-interpreter-is-statically-linked-to-libpython)
+   in some Linux distros like Debian or Ubuntu
+   you might need to run your Python scripts
    with the `python-jl` wrapper if you want to use asedftk in them.
    I.e. if you have written a calculation script `script.py` you
-   might need to start it as `python-jl script.py`.
+   might need to start it as `python-jl script.py`
+   in order to be able to use asedftk.
 
 ## Basic usage
 `asedftk.DFTK` is basically a class wrapping around DFTK and making it an

@@ -25,7 +25,7 @@ def check_julia():
     except julia.core.UnsupportedPythonError as e:
         string = ("\n\nIssues between python and Julia. Try to resolve by installing "
                   "required Julia packages using\n"
-                  '    python -m "import asedftk; asedftk.install()"')
+                  '    python3 -c "import asedftk; asedftk.install()"')
         warnings.warn(str(e) + string)
 
 
