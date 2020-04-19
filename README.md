@@ -33,21 +33,20 @@ in the field. See [dftk.org](https://dftk.org) for more details.
    ```
    python-jl -c "import asedftk; asedftk.install()"
    ```
-   **Note:** The use of `python-jl` instead of a plain `python`
-   is on purpose
+   **Note** the use of `python-jl` instead of a plain `python`
    to [work around some limitations](https://pyjulia.readthedocs.io/en/stable/troubleshooting.html#your-python-interpreter-is-statically-linked-to-libpython)
    present in some Linux distros like Debian or Ubuntu.
-4. That's it, you're all set. But before you get going, please note:
+4. That's it, you're all set. But please note:
    The limitation mentioned above
    implies that you might also need to run your Python scripts
    with the `python-jl` wrapper if you want to use asedftk in them.
    I.e. if you have written a calculation script `script.py` you
-   need to start it as `python-jl script.py`.
+   might need to start it as `python-jl script.py`.
 
 ## Basic usage
 `asedftk.DFTK` is basically a class wrapping around DFTK and making it an
 [ASE calculator](https://wiki.fysik.dtu.dk/ase/ase/calculators/calculators.html).
-Just use it like any other. For example:
+Just use it like any other calculator class. For example:
 ```python
 from asedftk import DFTK
 from ase.build import bulk

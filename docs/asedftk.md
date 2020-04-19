@@ -33,6 +33,7 @@ import ase.build
 magnesium = ase.build.bulk("Mg")
 magnesium.calc = DFTK(xc="PBE", smearing=("Gaussian", 10), nbands=8, kpts=(5, 5, 5))
 print("Magnesium energy: ", magnesium.get_potential_energy())
+print("Magnesium forces: ", magnesium.get_forces())
 ```
 
 ## DFTK parameters
@@ -43,47 +44,43 @@ mostly following the
 See also the `__init__` function
 in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calculator.jl).
 
-- **xc**: Exchange-correlation functional, default is `LDA`, options are `LDA` or `PBE`.
-- **kpts**: k-point grid to use. Valid options are:
-	- `(n1,n2,n3)`: Monkhorst-Pack grid
-	- `[(k11,k12,k13),(k21,k22,k23),...]`: Explicit k-Point list in units of the reciprocal lattice vectors
-	- `3.5` (or any float): k-point density as in `3.5` kpoints per Ǎngström.
-- **smearing**: Smearing function and temperature, options:
-	- `('Fermi-Dirac', width)`
-	- `('Gaussian', width)`
-	- `('Methfessel-Paxton', width, n)`
-	where in each case `width` is the width in eV and `n` is the Methfessel-Paxton order.
-- **nbands**: Number of bands to compute
+- **ecut**: Kinetic energy cutoff. 400eV by default.
 - **functionals**: Explicit functional list.
   This overwrites the choice of **xc**, but **xc** still needs to be given to select
   appropriate pseudopotentials. Valid options are
   all [functionals from libxc](https://www.tddft.org/programs/libxc/functionals/),
   for example `"lda_x"`, `"GGA_X_B86"`, `"GGA_C_LYP"`.
+- **kpts**: k-point grid to use. Valid options are:
+	- `(n1,n2,n3)`: Monkhorst-Pack grid
+	- `[(k11,k12,k13),(k21,k22,k23),...]`: Explicit k-Point list in units of the reciprocal lattice vectors
+	- `3.5` (or any float): k-point density as in `3.5` kpoints per Ǎngström.
+- **nbands**: Number of bands to compute
 - **pps**: Pseudopotential family. Currently the only choices are `hgh`
   (Goedecker-type pseudos) and `hgh.k` (semi-core version of `hgh`).
 - **scftol**: Convergence tolerance of the SCF. Default `1e-5`.
-- **ecut**: Kinetic energy cutoff. 400eV by default.
+- **smearing**: Smearing function and temperature, options:
+	- `('Fermi-Dirac', width)`
+	- `('Gaussian', width)`
+	- `('Methfessel-Paxton', width, n)`
+	where in each case `width` is the width in eV and `n` is the Methfessel-Paxton order.
 - **verbose**: Make the SCF be more verbose and print some iteration information.
-
+- **xc**: Exchange-correlation functional, default is `LDA`, options are `LDA` or `PBE`.
 
 ## Tips and tricks
 Generally combining Python and Julia codes (like this package does) is seamless.
-To give you an idea: The ASE calculator interface
-(which is defined as a Python base class)
-is actually implemented in Julia in
-[calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calculator.jl).
 Still there are a few rough edges,
-which are also worth knowing when working with asedftk:
+which are worth knowing when working with asedftk:
 
 - **Threading:** DFTK makes use of Julia's threading framework.
   This means that by default it runs single-threaded.
   To benefit from a multi-core CPU you need to explicitly set
   the environment variable `JULIA_NUM_THREADS`
-  to a value above 1 *before* using asedftk.
+  to a value above 1 *before* using asedftk,
+  i.e. before even starting the script.
 - On Debian and Ubuntu the use of the `python-jl` wrapper script
   is unfortunately necessary due to the `python` executable being
   statically linked to the libpython.
   See the [PyJulia documentation](https://pyjulia.readthedocs.io/en/stable/troubleshooting.html#your-python-interpreter-is-statically-linked-to-libpython)
   for details.
-- There are a few more [limitations](https://pyjulia.readthedocs.io/en/stable/limitations.html)
-  in the operability between Python and Julia worth knowing.
+- There are a few more [smaller limitations](https://pyjulia.readthedocs.io/en/stable/limitations.html)
+  in the interoperation of Python and Julia you probably should give a read to be aware.
