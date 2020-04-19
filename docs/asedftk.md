@@ -63,6 +63,7 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
   (Goedecker-type pseudos) and `hgh.k` (semi-core version of `hgh`).
 - **scftol**: Convergence tolerance of the SCF. Default `1e-5`.
 - **ecut**: Kinetic energy cutoff. 400eV by default.
+- **verbose**: Make the SCF be more verbose and print some iteration information.
 
 
 ## Tips and tricks

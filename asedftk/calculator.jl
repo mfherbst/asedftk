@@ -5,6 +5,7 @@ import JSON
 import DFTK: PlaneWaveBasis, Model, self_consistent_field, load_psp
 import DFTK: load_lattice, load_atoms, ElementPsp, model_DFT, forces
 import DFTK: Smearing, kgrid_size_from_minimal_spacing, Vec3, Mat3
+import DFTK: KerkerMixing, SimpleMixing, scf_default_callback
 
 ase_units = pyimport("ase.units")
 ase_io = pyimport("ase.io")
@@ -39,6 +40,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
             "pps"         => "hgh",
             "scftol"      => 1e-5,
             "ecut"        => 400,
+            "verbose"     => false,
         )
 
         calculator.Calculator.__init__(self; label=label, kwargs...)
@@ -250,9 +252,18 @@ inputerror(s) = pyraise(calculator.InputError(s))
         if !isnothing(self.parameters["nbands"])
             extraargs = (n_bands=self.parameters["nbands"], )
         end
+
+        # TODO Make this more configurable
+        mixing = basis.model.temperature > 0 ? KerkerMixing(0.7, 1.0) : SimpleMixing(0.7)
+        callback = info -> ()
+        if self.parameters["verbose"]
+            callback = scf_default_callback
+        end
+
         try
             tol = self.parameters["scftol"]  # TODO Maybe unit conversion here!
-            self_consistent_field(basis; tol=tol, callback=info -> (), extraargs...)
+            self_consistent_field(basis; tol=tol, callback=callback,
+                                  mixing=mixing, extraargs...)
         catch e
             pyraise(calculator.SCFError(string(e)))
         end

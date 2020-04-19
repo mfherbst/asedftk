@@ -120,7 +120,7 @@ def test_trajectories():
     f = h2.get_forces()
     assert not h2.calc.calculation_required(h2, ['energy', 'forces'])
     for i in range(len(FORCES)):
-        assert f[i] == approx(FORCES[i], rel=5e-4, abs=1e-6)
+        assert f[i] == approx(FORCES[i], rel=3e-3, abs=1e-6)
 
     # Writing and reading trajectories
     write('h2.traj', h2)
