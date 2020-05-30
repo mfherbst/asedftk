@@ -37,6 +37,7 @@ setup(
     ],
     #
     packages=["asedftk"],
+    package_data={"asedftk": ["calculator.jl"]},
     zip_safe=False,
     python_requires=">=3.6",
     install_requires=[

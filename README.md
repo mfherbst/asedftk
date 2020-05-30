@@ -22,7 +22,7 @@ in the field. See [dftk.org](https://dftk.org) for more details.
 ## Installation
 1. Install Julia e.g. by [downloading the binary](https://julialang.org/downloads).
    The use of at least **Julia 1.4** is required.
-   It is highly recommended you do this *before* installing asedftk.
+   It is highly recommended you install Julia *before* installing asedftk.
 2. Install asedftk from [PyPi](https://pypi.org/project/asedftk):
    ```
    pip install asedftk
