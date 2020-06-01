@@ -125,7 +125,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
         if isnothing(self.scfres)
             false
         else
-            self.scfres.basis.model.spin_polarisation in (:full, :collinear)
+            self.scfres.basis.model.spin_polarization in (:full, :collinear)
         end
     end
 
@@ -178,18 +178,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
             elseif lowercase(psmear[1]) == "gaussian"
                 smearing = Smearing.Gaussian()
             elseif lowercase(psmear[1]) == "methfessel-paxton"
-                # TODO This if can go in the next DFTK version
-                # because it will be built into DFTK
-                if psmear[3] == 0
-                    smearing = Smearing.Gaussian()
-                elseif psmear[3] == 1
-                    smearing = Smearing.MethfesselPaxton1()
-                elseif psmear[3] == 2
-                    smearing = Smearing.MethfesselPaxton2()
-                else
-                    inputerror("Methfessel-Paxton smearing beyond order 2 not " *
-                               "implemented in DFTK.")
-                end
+                smearing = Smearing.MethfesselPaxton(psmear[3])
             else
                 inputerror_param("smearing")
             end
@@ -200,7 +189,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
             inputerror("Charged systems not supported in DFTK.")
         end
 
-        # TODO This is the place where spin-polarisation should be added
+        # TODO This is the place where spin-polarization should be added
         #      once it is in DFTK.
 
         # Build DFTK atoms

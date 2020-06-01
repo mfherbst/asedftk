@@ -28,13 +28,12 @@ atoms = ase.Atoms(symbols='Mg2', pbc=True, cell=cell, positions=positions)
     @test atoms[1][1].symbol == :Mg
     @test atoms[1][2][1] ≈ [0, 0, 0]
     @test atoms[1][2][2] ≈ [1/3, 2/3, 1/2] atol=1e-5
-    # TODO bug in DFTK ... Disabled for now
-    # @test atoms[1][1].psp.identifier == "hgh/lda/mg-q2.hgh"
-    # @test atoms[1][1].psp.Zion == 2
+    @test atoms[1][1].psp.identifier == "hgh/lda/mg-q2.hgh"
+    @test atoms[1][1].psp.Zion == 2
 
     @test basis.model.temperature == 0.0
     @test basis.model.smearing isa DFTK.Smearing.None
-    @test basis.model.spin_polarisation == :none
+    @test basis.model.spin_polarization == :none
 
     xcterm = [tt for tt in basis.model.term_types if tt isa Xc][1]
     @test length(xcterm.functionals) == 1
@@ -54,13 +53,12 @@ end
     @test length(atoms) == 1
     @test length(atoms) == 1
     @test all(at isa ElementPsp for (at, positions) in atoms)
-    # TODO bug in DFTK ... Disabled for now
-    # @test atoms[1][1].psp.identifier == "hgh/lda/mg-q10.hgh"
-    # @test atoms[1][1].psp.Zion == 10
+    @test atoms[1][1].psp.identifier == "hgh/pbe/mg-q10.hgh"
+    @test atoms[1][1].psp.Zion == 10
 
     @test basis.model.temperature ≈ 10 * DFTK.units.eV atol=1e-8
     @test basis.model.smearing isa DFTK.Smearing.Gaussian
-    @test basis.model.spin_polarisation == :none
+    @test basis.model.spin_polarization == :none
 
     xcterm = [tt for tt in basis.model.term_types if tt isa Xc][1]
     @test length(xcterm.functionals) == 2
@@ -81,7 +79,7 @@ end
 
     @test basis.model.temperature ≈ 5 * DFTK.units.eV atol=1e-8
     @test basis.model.smearing isa DFTK.Smearing.FermiDirac
-    @test basis.model.spin_polarisation == :none
+    @test basis.model.spin_polarization == :none
 
     xcterm = [tt for tt in basis.model.term_types if tt isa Xc][1]
     @test length(xcterm.functionals) == 2
@@ -89,8 +87,8 @@ end
     @test xcterm.functionals[2].identifier == :gga_c_pbe
 
     @test length(basis.kpoints) == 2
-    @test basis.kpoints[1].coordinate ≈ [kpts[1]...]
-    @test basis.kpoints[2].coordinate ≈ [kpts[2]...]
+    @test Float64.(basis.kpoints[1].coordinate) ≈ [kpts[1]...]
+    @test Float64.(basis.kpoints[2].coordinate) ≈ [kpts[2]...]
 end
 
 @testset "Test smearing options" begin
@@ -125,8 +123,8 @@ end
 @testset "Silicon calculation" begin
     label = "silicon_dftk"
     ENERGY_PBE = -213.12688268374683  # eV
-    FORCES_PBE = [[ 25.34636840001346  9.7064846689645 -3.361631681010807e-7];
-                  [-25.34636754014557 -9.7064849446649 -3.689230622334620e-7]]
+    FORCES_PBE = [[0.0008302 0.00076297 -0.00085789];
+                  [0.0017841 0.00276341  0.00133592]]
 
     silicon = bulk("Si")
     silicon.calc = asedftk.DFTK(;xc="PBE", kpts=(3, 3, 3), ecut=190, scftol=1e-4,

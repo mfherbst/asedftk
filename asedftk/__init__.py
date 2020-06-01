@@ -5,7 +5,7 @@ __license__ = "MIT"
 __author__ = ["Michael F. Herbst"]
 
 # List of all compatible DFTK versions
-COMPATIBLE_DFTK = ["0.0.6"]
+COMPATIBLE_DFTK = ["0.0.7"]
 
 
 def check_julia():

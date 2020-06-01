@@ -108,8 +108,8 @@ def test_hydrogen():
 #
 def test_trajectories():
     ENERGY = -30.38758246199375
-    FORCES = [[1.806683093171236e-7, 1.168990788074504e-7, 16.88008774023254],
-              [1.533546493285508e-7, 1.558355278228883e-7, -16.88008774491350]]
+    FORCES = [[0.0, 0.0,  16.7078335],
+              [0.0, 0.0, -16.7078335]]
 
     h2 = molecule('H2', pbc=True)
     h2.center(vacuum=2.0)
@@ -120,7 +120,7 @@ def test_trajectories():
     f = h2.get_forces()
     assert not h2.calc.calculation_required(h2, ['energy', 'forces'])
     for i in range(len(FORCES)):
-        assert f[i] == approx(FORCES[i], rel=3e-3, abs=1e-6)
+        assert f[i] == approx(FORCES[i], rel=3e-3, abs=1e-3)
 
     # Writing and reading trajectories
     write('h2.traj', h2)
