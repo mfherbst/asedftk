@@ -1,9 +1,20 @@
 # DFTK-based calculator for ASE
-[![Documentation](https://img.shields.io/badge/doc-latest-blue.svg)](https://github.com/mfherbst/asedftk/blob/master/docs/asedftk.md)
-[![pypi](https://img.shields.io/pypi/v/asedftk)](https://pypi.org/project/asedftk)
-[![gitter](https://badges.gitter.im/DFTK-jl/community.svg)](https://gitter.im/DFTK-jl/community)
-[![license](https://img.shields.io/github/license/mfherbst/asedftk.svg?maxAge=2592000)](https://github.com/mfherbst/asedftk/blob/master/LICENSE)
-[![Build Status](https://api.travis-ci.com/mfherbst/asedftk.svg?branch=master)](https://travis-ci.com/mfherbst/asedftk)
+
+| **Documentation**                                       | **Build Status**              |  **Installation**         |
+|:------------------------------------------------------- |:----------------------------- |:------------------------- |
+| [![][docs-img]][docs-url] [![][gitter-img]][gitter-url] | [![][travis-img]][travis-url] | [![][pypi-img]][pypi-url] |
+
+[docs-img]: https://img.shields.io/badge/docs-latest-blue.svg
+[docs-url]: https://github.com/mfherbst/asedftk/blob/master/docs/asedftk.md
+
+[gitter-img]: https://badges.gitter.im/DFTK-jl/community.svg
+[gitter-url]: https://gitter.im/DFTK-jl/community
+
+[travis-img]: https://api.travis-ci.com/mfherbst/asedftk.svg?branch=master
+[travis-url]: https://travis-ci.com/mfherbst/asedftk
+
+[pypi-img]: https://img.shields.io/pypi/v/asedftk
+[pypi-url]: https://pypi.org/project/asedftk
 
 Small wrapper around the
 [**density-functional toolkit (DFTK)**](https://dftk.org)
