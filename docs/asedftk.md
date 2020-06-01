@@ -52,8 +52,14 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
   for example `"lda_x"`, `"GGA_X_B86"`, `"GGA_C_LYP"`.
 - **kpts**: k-point grid to use. Valid options are:
 	- `(n1,n2,n3)`: Monkhorst-Pack grid
+	- `(n1,n2,n3,"gamma")`: Shifted MP grid to contain the gamma point.
 	- `[(k11,k12,k13),(k21,k22,k23),...]`: Explicit k-Point list in units of the reciprocal lattice vectors
 	- `3.5` (or any float): k-point density as in `3.5` kpoints per Ǎngström.
+- **mixing**: Mixing scheme used during SCF iterations. Examples for valid options:
+	- `("SimpleMixing", "0.7")`: Simple mixing with damping `0.7`
+	- `("KerkerMixing", "0.7", "1.0")`: Kerker mixing with damping `α=0.7` and
+	  screening parameter `G0=1.0`. Applies the operator kernel
+	  `α * G^2 / (G0^2 + G^2)` for a wave vector `G` in frequency space.
 - **nbands**: Number of bands to compute
 - **pps**: Pseudopotential family. Currently the only choices are `hgh`
   (Goedecker-type pseudos) and `hgh.k` (semi-core version of `hgh`).

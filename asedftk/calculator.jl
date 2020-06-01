@@ -41,6 +41,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
             "scftol"      => 1e-5,
             "ecut"        => 400,
             "verbose"     => false,
+            "mixing"      => nothing,
         )
 
         calculator.Calculator.__init__(self; label=label, kwargs...)
@@ -204,25 +205,20 @@ inputerror(s) = pyraise(calculator.InputError(s))
     end
 
     function get_dftk_basis(self; model=self.get_dftk_model())
-
         # Build kpoint mesh
         kpts = self.parameters["kpts"]
         kgrid = [1, 1, 1]
+        kshift = [0, 0, 0]
         if kpts isa Number
             kgrid = kgrid_size_from_minimal_spacing(model.lattice, kpts * ase_units.Bohr)
         elseif length(kpts) == 3 && all(kpt isa Number for kpt in kpts)
             kgrid = kpts  # Just a plain MP grid
         elseif length(kpts) == 4 && all(kpt isa Number for kpt in kpts[1:3])
             kpts[4] != "gamma" && inputerror("Unknown value to kpts: $kpts")
-
-            # MP grid shifted to always contain Gamma
-            if all(isodd, kpts[1:3])
-                kgrid = kpts[1:3]
-            else
-                inputerror("Shifted Monkhorst-Pack grids not yet supported in DFTK.")
-            end
+            kshift = Int.(iseven.([2, 4, 5]))  # Shift MP grid to always contain Gamma
         elseif kpts isa AbstractArray
             kgrid = nothing
+            kshift = nothing
             kcoords = [Vec3(kpt...) for kpt in kpts]
             ksymops = [[(Mat3{Int}(I), Vec3(zeros(3)))] for _ in 1:length(kcoords)]
         end
@@ -232,7 +228,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
         if isnothing(kgrid)
             PlaneWaveBasis(model, Ecut, kcoords, ksymops)
         else
-            PlaneWaveBasis(model, Ecut, kgrid=kgrid)
+            PlaneWaveBasis(model, Ecut, kgrid=kgrid, kshift=kshift)
         end
     end
 
@@ -242,8 +238,19 @@ inputerror(s) = pyraise(calculator.InputError(s))
             extraargs = (n_bands=self.parameters["nbands"], )
         end
 
-        # TODO Make this more configurable
         mixing = basis.model.temperature > 0 ? KerkerMixing(0.7, 1.0) : SimpleMixing(0.7)
+        if !isnothing(self.parameters["mixing"])
+            name = Symbol(self.parameters["mixing"][1])
+            if !hasproperty(DFTK, name)
+                inputerror("A mixing method $(self.parameters["mixing"]) is " *
+                           "not known to DFTK.")
+            end
+            mixing_type = getproperty(DFTK, name)
+            args = ifelse(length(self.parameters["mixing"]) < 2, (),
+                          self.parameters["mixing"][2:end])
+            mixing = mixing_type(args...)
+        end
+
         callback = info -> ()
         if self.parameters["verbose"]
             callback = scf_default_callback
