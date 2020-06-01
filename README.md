@@ -26,9 +26,9 @@ the atomistic simulation environment.
 DFTK is a small library of Julia algorithms
 for experimentation with plane-wave-based
 density-functional theory (PWDFT) methods.
-While this code is not yet fully optimised and fine-tuned,
-performance is on the same order of magnitude as established packages
-in the field. See [dftk.org](https://dftk.org) for more details.
+Its performance is on the same order of magnitude as established packages
+in the field. See [dftk.org](https://dftk.org) and
+the [DFTK documentation](https://juliamolsim.github.io/DFTK.jl/dev/) for more details.
 
 ## Installation
 1. Install Julia e.g. by [downloading the binary](https://julialang.org/downloads).
