@@ -91,9 +91,28 @@ end
     @test Float64.(basis.kpoints[2].coordinate) ≈ [kpts[2]...]
 end
 
+@testset "Test kpoint options" begin
+    kpointoptions = [
+        (ase=0.5,                length=18, kpt1=[0.0, 0.0, 0.0], kpt2=[ 1/5, 0.0, 0.0]),
+        (ase=[2, 3, 4],          length=12, kpt1=[0.0, 0.0, 0.0], kpt2=[-0.5, 0.0, 0.0]),
+        (ase=[2, 3, 4, "gamma"], length=9,  kpt1=[1/4, 1/6, 0.0], kpt2=[-1/4, 1/6, 0.0]),
+        (ase=[(0, 0.2, 0), (0.5, 0.2, 0.3)], length=2,
+         kpt1=[0, 0.2, 0], kpt2=[0.5, 0.2, 0.3]),
+    ]
+
+    for params in kpointoptions
+        calc = asedftk.DFTK(;kpts=params.ase)
+        calc.atoms = py"atoms"
+        basis = calc.get_dftk_basis()
+        @test length(basis.kpoints) == params.length
+        @test Float64.(basis.kpoints[1].coordinate) ≈ params.kpt1
+        @test Float64.(basis.kpoints[2].coordinate) ≈ params.kpt2
+    end
+end
+
 @testset "Test smearing options" begin
     smearingoptions = [
-        (ase=("Fremi-Dirac", 10), temperature=10 * DFTK.units.eV,
+        (ase=("Fermi-Dirac", 10), temperature=10 * DFTK.units.eV,
          smearing=DFTK.Smearing.FermiDirac),
         (ase=("Gaussian", 5), temperature=5 * DFTK.units.eV,
          smearing=DFTK.Smearing.Gaussian),
@@ -117,21 +136,22 @@ end
 # TODO Missing checks for mandatory ASE parameters:
 #      See https://wiki.fysik.dtu.dk/ase/development/calculators.html
 #      and https://wiki.fysik.dtu.dk/ase/development/proposals/calculators.html
-#      - (n1,n2,n3,'gamma')  (shifted kpoint grid)
 #      - charge
 
 @testset "Silicon calculation" begin
     label = "silicon_dftk"
     ENERGY_PBE = -213.12688268374683  # eV
-    FORCES_PBE = [[0.0008302 0.00076297 -0.00085789];
-                  [0.0017841 0.00276341  0.00133592]]
+    FORCES_PBE = [[0.0 0.0 0.0]; [0.0 0.0 0.0]]
 
     silicon = bulk("Si")
     silicon.calc = asedftk.DFTK(;xc="PBE", kpts=(3, 3, 3), ecut=190, scftol=1e-4,
                                 nbands=12, label=label)
     @test silicon.get_potential_energy() ≈ ENERGY_PBE atol=1e-4 rtol=1e-4
-    @test silicon.get_forces() ≈ FORCES_PBE atol=5e-3 rtol=1e-3
+    @test silicon.get_forces() ≈ FORCES_PBE atol=1e-2
     @test length(silicon.calc.scfres.eigenvalues[1]) ≥ 12
+
+    orig_ene = silicon.get_potential_energy()
+    orig_forces = silicon.get_forces()
 
     # Read resultsfile again:
     @test isfile(label * ".json")
@@ -141,8 +161,8 @@ end
     @test silicon.calc.parameters["xc"] == "PBE"
     @test silicon.calc.parameters["kpts"] == [3, 3, 3]
     @test silicon.calc.parameters["ecut"] == 190
-    @test silicon.calc.results["energy"] ≈ ENERGY_PBE atol=1e-4 rtol=1e-4
-    @test silicon.calc.results["forces"] ≈ FORCES_PBE atol=3e-5 rtol=1e-3
+    @test silicon.calc.results["energy"] ≈ orig_ene
+    @test silicon.calc.results["forces"] ≈ orig_forces
 
     # Test some invariances
     @test silicon == asedftk.DFTK.read_atoms(label)
