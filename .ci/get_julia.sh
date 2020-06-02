@@ -1,8 +1,8 @@
 #!/bin/bash
 set -eu
 
-LINUX_URL=https://julialang-s3.julialang.org/bin/linux/x64/1.4/julia-1.4.0-linux-x86_64.tar.gz
-LINUX_HASH=30d126dc3598f3cd0942de21cc38493658037ccc40eb0882b3b4c418770ca751
+LINUX_URL=https://julialang-s3.julialang.org/bin/linux/x64/1.4/julia-1.4.2-linux-x86_64.tar.gz
+LINUX_HASH=d77311be23260710e89700d0b1113eecf421d6cf31a9cebad3f6bdd606165c28
 
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
 	export HOMEBREW_NO_INSTALL_CLEANUP=1
