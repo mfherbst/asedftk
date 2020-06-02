@@ -41,6 +41,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
             "scftol"      => 1e-5,
             "ecut"        => 400,
             "verbose"     => false,
+            "mixing"      => nothing,
         )
 
         calculator.Calculator.__init__(self; label=label, kwargs...)
@@ -125,7 +126,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
         if isnothing(self.scfres)
             false
         else
-            self.scfres.basis.model.spin_polarisation in (:full, :collinear)
+            self.scfres.basis.model.spin_polarization in (:full, :collinear)
         end
     end
 
@@ -178,18 +179,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
             elseif lowercase(psmear[1]) == "gaussian"
                 smearing = Smearing.Gaussian()
             elseif lowercase(psmear[1]) == "methfessel-paxton"
-                # TODO This if can go in the next DFTK version
-                # because it will be built into DFTK
-                if psmear[3] == 0
-                    smearing = Smearing.Gaussian()
-                elseif psmear[3] == 1
-                    smearing = Smearing.MethfesselPaxton1()
-                elseif psmear[3] == 2
-                    smearing = Smearing.MethfesselPaxton2()
-                else
-                    inputerror("Methfessel-Paxton smearing beyond order 2 not " *
-                               "implemented in DFTK.")
-                end
+                smearing = Smearing.MethfesselPaxton(psmear[3])
             else
                 inputerror_param("smearing")
             end
@@ -200,7 +190,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
             inputerror("Charged systems not supported in DFTK.")
         end
 
-        # TODO This is the place where spin-polarisation should be added
+        # TODO This is the place where spin-polarization should be added
         #      once it is in DFTK.
 
         # Build DFTK atoms
@@ -215,25 +205,21 @@ inputerror(s) = pyraise(calculator.InputError(s))
     end
 
     function get_dftk_basis(self; model=self.get_dftk_model())
-
         # Build kpoint mesh
         kpts = self.parameters["kpts"]
         kgrid = [1, 1, 1]
+        kshift = [0, 0, 0]
         if kpts isa Number
             kgrid = kgrid_size_from_minimal_spacing(model.lattice, kpts * ase_units.Bohr)
         elseif length(kpts) == 3 && all(kpt isa Number for kpt in kpts)
             kgrid = kpts  # Just a plain MP grid
         elseif length(kpts) == 4 && all(kpt isa Number for kpt in kpts[1:3])
             kpts[4] != "gamma" && inputerror("Unknown value to kpts: $kpts")
-
-            # MP grid shifted to always contain Gamma
-            if all(isodd, kpts[1:3])
-                kgrid = kpts[1:3]
-            else
-                inputerror("Shifted Monkhorst-Pack grids not yet supported in DFTK.")
-            end
+            kshift = Int.(iseven.([2, 4, 5])) .// 2  # Shift MP grid to always contain Gamma
+            kgrid = kpts[1:3]
         elseif kpts isa AbstractArray
             kgrid = nothing
+            kshift = nothing
             kcoords = [Vec3(kpt...) for kpt in kpts]
             ksymops = [[(Mat3{Int}(I), Vec3(zeros(3)))] for _ in 1:length(kcoords)]
         end
@@ -243,18 +229,41 @@ inputerror(s) = pyraise(calculator.InputError(s))
         if isnothing(kgrid)
             PlaneWaveBasis(model, Ecut, kcoords, ksymops)
         else
-            PlaneWaveBasis(model, Ecut, kgrid=kgrid)
+            PlaneWaveBasis(model, Ecut, kgrid=kgrid, kshift=kshift)
         end
     end
 
+    function get_dftk_mixing(self; basis=self.get_dftk_basis())
+        mixing = basis.model.temperature > 0 ? KerkerMixing(0.7, 1.0) : SimpleMixing(0.7)
+        if !isnothing(self.parameters["mixing"])
+            if self.parameters["mixing"] isa Tuple
+                name = self.parameters["mixing"][1]
+                args = ifelse(length(self.parameters["mixing"]) < 2, (),
+                              self.parameters["mixing"][2:end])
+            else
+                name = self.parameters["mixing"]
+                args = ()
+            end
+
+            valid_types = Dict("KerkerMixing" => KerkerMixing,
+                               "SimpleMixing" => SimpleMixing)
+            if !haskey(valid_types, name)
+                inputerror("A mixing method $name is not known to DFTK.")
+            else
+                mixing = valid_types[name](args...)
+            end
+        end
+        mixing
+    end
+
     function get_dftk_scfres(self; basis=self.get_dftk_basis())
+        mixing = self.get_dftk_mixing(basis=basis)
+
         extraargs=()
         if !isnothing(self.parameters["nbands"])
             extraargs = (n_bands=self.parameters["nbands"], )
         end
 
-        # TODO Make this more configurable
-        mixing = basis.model.temperature > 0 ? KerkerMixing(0.7, 1.0) : SimpleMixing(0.7)
         callback = info -> ()
         if self.parameters["verbose"]
             callback = scf_default_callback

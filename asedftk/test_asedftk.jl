@@ -28,13 +28,12 @@ atoms = ase.Atoms(symbols='Mg2', pbc=True, cell=cell, positions=positions)
     @test atoms[1][1].symbol == :Mg
     @test atoms[1][2][1] ≈ [0, 0, 0]
     @test atoms[1][2][2] ≈ [1/3, 2/3, 1/2] atol=1e-5
-    # TODO bug in DFTK ... Disabled for now
-    # @test atoms[1][1].psp.identifier == "hgh/lda/mg-q2.hgh"
-    # @test atoms[1][1].psp.Zion == 2
+    @test atoms[1][1].psp.identifier == "hgh/lda/mg-q2.hgh"
+    @test atoms[1][1].psp.Zion == 2
 
     @test basis.model.temperature == 0.0
     @test basis.model.smearing isa DFTK.Smearing.None
-    @test basis.model.spin_polarisation == :none
+    @test basis.model.spin_polarization == :none
 
     xcterm = [tt for tt in basis.model.term_types if tt isa Xc][1]
     @test length(xcterm.functionals) == 1
@@ -54,13 +53,12 @@ end
     @test length(atoms) == 1
     @test length(atoms) == 1
     @test all(at isa ElementPsp for (at, positions) in atoms)
-    # TODO bug in DFTK ... Disabled for now
-    # @test atoms[1][1].psp.identifier == "hgh/lda/mg-q10.hgh"
-    # @test atoms[1][1].psp.Zion == 10
+    @test atoms[1][1].psp.identifier == "hgh/pbe/mg-q10.hgh"
+    @test atoms[1][1].psp.Zion == 10
 
     @test basis.model.temperature ≈ 10 * DFTK.units.eV atol=1e-8
     @test basis.model.smearing isa DFTK.Smearing.Gaussian
-    @test basis.model.spin_polarisation == :none
+    @test basis.model.spin_polarization == :none
 
     xcterm = [tt for tt in basis.model.term_types if tt isa Xc][1]
     @test length(xcterm.functionals) == 2
@@ -81,7 +79,7 @@ end
 
     @test basis.model.temperature ≈ 5 * DFTK.units.eV atol=1e-8
     @test basis.model.smearing isa DFTK.Smearing.FermiDirac
-    @test basis.model.spin_polarisation == :none
+    @test basis.model.spin_polarization == :none
 
     xcterm = [tt for tt in basis.model.term_types if tt isa Xc][1]
     @test length(xcterm.functionals) == 2
@@ -89,13 +87,32 @@ end
     @test xcterm.functionals[2].identifier == :gga_c_pbe
 
     @test length(basis.kpoints) == 2
-    @test basis.kpoints[1].coordinate ≈ [kpts[1]...]
-    @test basis.kpoints[2].coordinate ≈ [kpts[2]...]
+    @test Float64.(basis.kpoints[1].coordinate) ≈ [kpts[1]...]
+    @test Float64.(basis.kpoints[2].coordinate) ≈ [kpts[2]...]
+end
+
+@testset "Test kpoint options" begin
+    kpointoptions = [
+        (ase=0.5,                length=18, kpt1=[0.0, 0.0, 0.0], kpt2=[ 1/5, 0.0, 0.0]),
+        (ase=[2, 3, 4],          length=12, kpt1=[0.0, 0.0, 0.0], kpt2=[-0.5, 0.0, 0.0]),
+        (ase=[2, 3, 4, "gamma"], length=9,  kpt1=[1/4, 1/6, 0.0], kpt2=[-1/4, 1/6, 0.0]),
+        (ase=[(0, 0.2, 0), (0.5, 0.2, 0.3)], length=2,
+         kpt1=[0, 0.2, 0], kpt2=[0.5, 0.2, 0.3]),
+    ]
+
+    for params in kpointoptions
+        calc = asedftk.DFTK(;kpts=params.ase)
+        calc.atoms = py"atoms"
+        basis = calc.get_dftk_basis()
+        @test length(basis.kpoints) == params.length
+        @test Float64.(basis.kpoints[1].coordinate) ≈ params.kpt1
+        @test Float64.(basis.kpoints[2].coordinate) ≈ params.kpt2
+    end
 end
 
 @testset "Test smearing options" begin
     smearingoptions = [
-        (ase=("Fremi-Dirac", 10), temperature=10 * DFTK.units.eV,
+        (ase=("Fermi-Dirac", 10), temperature=10 * DFTK.units.eV,
          smearing=DFTK.Smearing.FermiDirac),
         (ase=("Gaussian", 5), temperature=5 * DFTK.units.eV,
          smearing=DFTK.Smearing.Gaussian),
@@ -116,24 +133,42 @@ end
     end
 end
 
+@testset "Test mixing options" begin
+    mixingoptions = [
+        (ase=("SimpleMixing"), mixing=SimpleMixing, α=1.0),
+        (ase=("SimpleMixing", 0.4), mixing=SimpleMixing, α=0.4),
+        (ase=("KerkerMixing", 0.4, 0.7), mixing=KerkerMixing, α=0.4),
+        (ase=("KerkerMixing"), mixing=KerkerMixing, α=0.8),
+    ]
+
+    for params in mixingoptions
+        calc = asedftk.DFTK(;mixing=params.ase)
+        calc.atoms = py"atoms"
+        mixing = calc.get_dftk_mixing()
+        @test mixing isa params.mixing
+        @test mixing.α == params.α
+    end
+end
+
 # TODO Missing checks for mandatory ASE parameters:
 #      See https://wiki.fysik.dtu.dk/ase/development/calculators.html
 #      and https://wiki.fysik.dtu.dk/ase/development/proposals/calculators.html
-#      - (n1,n2,n3,'gamma')  (shifted kpoint grid)
 #      - charge
 
 @testset "Silicon calculation" begin
     label = "silicon_dftk"
     ENERGY_PBE = -213.12688268374683  # eV
-    FORCES_PBE = [[ 25.34636840001346  9.7064846689645 -3.361631681010807e-7];
-                  [-25.34636754014557 -9.7064849446649 -3.689230622334620e-7]]
+    FORCES_PBE = [[0.0 0.0 0.0]; [0.0 0.0 0.0]]
 
     silicon = bulk("Si")
     silicon.calc = asedftk.DFTK(;xc="PBE", kpts=(3, 3, 3), ecut=190, scftol=1e-4,
                                 nbands=12, label=label)
     @test silicon.get_potential_energy() ≈ ENERGY_PBE atol=1e-4 rtol=1e-4
-    @test silicon.get_forces() ≈ FORCES_PBE atol=5e-3 rtol=1e-3
+    @test silicon.get_forces() ≈ FORCES_PBE atol=1e-2
     @test length(silicon.calc.scfres.eigenvalues[1]) ≥ 12
+
+    orig_ene = silicon.get_potential_energy()
+    orig_forces = silicon.get_forces()
 
     # Read resultsfile again:
     @test isfile(label * ".json")
@@ -143,8 +178,8 @@ end
     @test silicon.calc.parameters["xc"] == "PBE"
     @test silicon.calc.parameters["kpts"] == [3, 3, 3]
     @test silicon.calc.parameters["ecut"] == 190
-    @test silicon.calc.results["energy"] ≈ ENERGY_PBE atol=1e-4 rtol=1e-4
-    @test silicon.calc.results["forces"] ≈ FORCES_PBE atol=3e-5 rtol=1e-3
+    @test silicon.calc.results["energy"] ≈ orig_ene
+    @test silicon.calc.results["forces"] ≈ orig_forces
 
     # Test some invariances
     @test silicon == asedftk.DFTK.read_atoms(label)

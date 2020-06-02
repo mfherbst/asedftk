@@ -4,8 +4,8 @@ __version__ = "0.1.1"
 __license__ = "MIT"
 __author__ = ["Michael F. Herbst"]
 
-# List of all compatible DFTK versions
-COMPATIBLE_DFTK = ["0.0.6"]
+# List of all compatible DFTK major.minor versions
+COMPATIBLE_DFTK = ["0.1"]
 
 
 def check_julia():
@@ -17,6 +17,8 @@ def check_julia():
     try:
         from julia import Main
 
+        # XXX Brew only has julia 1.3.0, so we still need to be compatible
+        #     with it, but we really should not ...
         julia_compatible = Main.eval('VERSION >= v"1.3.0"')
         if not julia_compatible:
             raise ImportError("Your Julia version is too old. "
@@ -41,9 +43,7 @@ def dftk_version():
                     if package.name == "DFTK"][end])
         ''')
     else:
-        warnings.warn("Cannot determine DFTK version if using Julia < 1.4.0. "
-                      "Hoping for the best ...")
-        return COMPATIBLE_DFTK[-1]
+        return "0.0.7"  # Well actually we just can't determine it
 
 
 def has_compatible_dftk():
@@ -55,7 +55,11 @@ def has_compatible_dftk():
     except ImportError:
         return False
 
-    return dftk_version() in COMPATIBLE_DFTK
+    version = dftk_version()
+    if version == "0.0.7":
+        return True
+    else:
+        return any(version.split(".")[:2] == v.split(".") for v in COMPATIBLE_DFTK)
 
 
 def install(*args, **kwargs):
@@ -71,7 +75,8 @@ def install(*args, **kwargs):
         Pkg.add("JSON")
         Pkg.Registry.add(Pkg.RegistrySpec(
             url="https://github.com/JuliaMolSim/MolSim.git"))
-        Pkg.add(Pkg.PackageSpec(name="DFTK", version=COMPATIBLE_DFTK[-1]))
+        Pkg.add(Pkg.PackageSpec(name="DFTK", version="0.0.7"))
+        # version=COMPATIBLE_DFTK[-1]))
 
 
 __all__ = ["install", "dftk_version"]
