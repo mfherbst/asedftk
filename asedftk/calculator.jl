@@ -233,23 +233,35 @@ inputerror(s) = pyraise(calculator.InputError(s))
         end
     end
 
+    function get_dftk_mixing(self; basis=self.get_dftk_basis())
+        mixing = basis.model.temperature > 0 ? KerkerMixing(0.7, 1.0) : SimpleMixing(0.7)
+        if !isnothing(self.parameters["mixing"])
+            if self.parameters["mixing"] isa Tuple
+                name = self.parameters["mixing"][1]
+                args = ifelse(length(self.parameters["mixing"]) < 2, (),
+                              self.parameters["mixing"][2:end])
+            else
+                name = self.parameters["mixing"]
+                args = ()
+            end
+
+            valid_types = Dict("KerkerMixing" => KerkerMixing,
+                               "SimpleMixing" => SimpleMixing)
+            if !haskey(valid_types, name)
+                inputerror("A mixing method $name is not known to DFTK.")
+            else
+                mixing = valid_types[name](args...)
+            end
+        end
+        mixing
+    end
+
     function get_dftk_scfres(self; basis=self.get_dftk_basis())
+        mixing = self.get_dftk_mixing(basis=basis)
+
         extraargs=()
         if !isnothing(self.parameters["nbands"])
             extraargs = (n_bands=self.parameters["nbands"], )
-        end
-
-        mixing = basis.model.temperature > 0 ? KerkerMixing(0.7, 1.0) : SimpleMixing(0.7)
-        if !isnothing(self.parameters["mixing"])
-            name = Symbol(self.parameters["mixing"][1])
-            if !hasproperty(DFTK, name)
-                inputerror("A mixing method $(self.parameters["mixing"]) is " *
-                           "not known to DFTK.")
-            end
-            mixing_type = getproperty(DFTK, name)
-            args = ifelse(length(self.parameters["mixing"]) < 2, (),
-                          self.parameters["mixing"][2:end])
-            mixing = mixing_type(args...)
         end
 
         callback = info -> ()

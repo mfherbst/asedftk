@@ -133,6 +133,23 @@ end
     end
 end
 
+@testset "Test mixing options" begin
+    mixingoptions = [
+        (ase=("SimpleMixing"), mixing=SimpleMixing, α=1.0),
+        (ase=("SimpleMixing", 0.4), mixing=SimpleMixing, α=0.4),
+        (ase=("KerkerMixing", 0.4, 0.7), mixing=KerkerMixing, α=0.4),
+        (ase=("KerkerMixing"), mixing=KerkerMixing, α=0.8),
+    ]
+
+    for params in mixingoptions
+        calc = asedftk.DFTK(;mixing=params.ase)
+        calc.atoms = py"atoms"
+        mixing = calc.get_dftk_mixing()
+        @test mixing isa params.mixing
+        @test mixing.α == params.α
+    end
+end
+
 # TODO Missing checks for mandatory ASE parameters:
 #      See https://wiki.fysik.dtu.dk/ase/development/calculators.html
 #      and https://wiki.fysik.dtu.dk/ase/development/proposals/calculators.html

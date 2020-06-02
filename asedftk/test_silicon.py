@@ -10,6 +10,7 @@ FORCES_PBE = [[0, 0, 0.], [0, 0, 0.]]
 
 def test_silicon():
     silicon = bulk("Si")
-    silicon.calc = asedftk.DFTK(xc="PBE", kpts=(3, 3, 3), ecut=190, scftol=1e-4)
+    silicon.calc = asedftk.DFTK(xc="PBE", kpts=(3, 3, 3), ecut=190, scftol=1e-4,
+                                mixing=("SimpleMixing", 1.3))
     assert_allclose(silicon.get_potential_energy(), ENERGY_PBE, atol=1e-4)
-    assert_allclose(silicon.get_forces(), FORCES_PBE, atol=5e-3)
+    assert_allclose(silicon.get_forces(), FORCES_PBE, atol=1e-2)

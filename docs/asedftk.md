@@ -61,8 +61,8 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
 	  screening parameter `G0 = 1.0`. Applies the operator kernel
 	  `α * G^2 / (G0^2 + G^2)` for a wave vector `G` in frequency space.
 - **nbands**: Number of bands to compute
-- **pps**: Pseudopotential family. Currently the only choices are `hgh`
-  (Goedecker-type pseudos) and `hgh.k` (semi-core version of `hgh`).
+- **pps**: Pseudopotential family. Currently the only choices are `"hgh"`
+  (Goedecker-type pseudos) and `"hgh.k"` (semi-core version of `"hgh"`).
 - **scftol**: Convergence tolerance of the SCF. Default `1e-5`.
 - **smearing**: Smearing function and temperature, options:
 	- `('Fermi-Dirac', width)`
