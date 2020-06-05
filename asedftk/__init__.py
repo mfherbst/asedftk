@@ -43,7 +43,7 @@ def dftk_version():
                     if package.name == "DFTK"][end])
         ''')
     else:
-        return "0.0.7"  # Well actually we just can't determine it
+        return COMPATIBLE_DFTK[0] + ".0"  # Well actually we just can't determine it
 
 
 def has_compatible_dftk():
@@ -56,10 +56,7 @@ def has_compatible_dftk():
         return False
 
     version = dftk_version()
-    if version == "0.0.7":
-        return True
-    else:
-        return any(version.split(".")[:2] == v.split(".") for v in COMPATIBLE_DFTK)
+    return any(version.split(".")[:2] == v.split(".") for v in COMPATIBLE_DFTK)
 
 
 def install(*args, **kwargs):
@@ -73,10 +70,7 @@ def install(*args, **kwargs):
         from julia import Pkg  # noqa: F811
 
         Pkg.add("JSON")
-        Pkg.Registry.add(Pkg.RegistrySpec(
-            url="https://github.com/JuliaMolSim/MolSim.git"))
-        Pkg.add(Pkg.PackageSpec(name="DFTK", version="0.0.7"))
-        # version=COMPATIBLE_DFTK[-1]))
+        Pkg.add(Pkg.PackageSpec(name="DFTK", version=COMPATIBLE_DFTK[-1]))
 
 
 __all__ = ["install", "dftk_version"]
