@@ -133,7 +133,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
     function get_dftk_model(self)
         inputerror_param(param) = inputerror("Unknown value to $param: " *
                                              "$(self.parameters[param])")
-        if isnothing(self.atoms)
+        if isnothing(self.atoms) || length(self.atoms) == 0
             pyraise(calculator.CalculatorSetupError("An Atoms object must be provided to " *
                                                     "perform a calculation"))
         end
