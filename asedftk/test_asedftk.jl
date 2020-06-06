@@ -67,7 +67,7 @@ end
 
     kgrid = DFTK.kgrid_size_from_minimal_spacing(basis.model.lattice,
                                                  0.3 / DFTK.units.Ǎ)
-    kcoords, ksymops = bzmesh_ir_wedge(kgrid, basis.model.lattice, basis.model.atoms)
+    kcoords, ksymops = bzmesh_ir_wedge(kgrid, basis.model.symops)
     @test kcoords ≈ [kpt.coordinate for kpt in basis.kpoints]
 end
 
