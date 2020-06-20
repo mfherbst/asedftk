@@ -240,7 +240,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
                 name = self.parameters["mixing"][1]
                 kwargs = ifelse(length(self.parameters["mixing"]) < 2, Dict(),
                                 self.parameters["mixing"][2:end])
-                kwargs = Dict(symbol(name) => value
+                kwargs = Dict(Symbol(name) => value
                             for (name, value) in pairs(kwargs))
             else
                 name = self.parameters["mixing"]
