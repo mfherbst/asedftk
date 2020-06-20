@@ -239,7 +239,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
             if self.parameters["mixing"] isa Tuple
                 name = self.parameters["mixing"][1]
                 kwargs = ifelse(length(self.parameters["mixing"]) < 2, Dict(),
-                                self.parameters["mixing"][2:end])
+                                self.parameters["mixing"][2])
                 kwargs = Dict(Symbol(name) => value
                             for (name, value) in pairs(kwargs))
             else
