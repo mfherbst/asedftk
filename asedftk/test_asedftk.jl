@@ -136,8 +136,9 @@ end
 @testset "Test mixing options" begin
     mixingoptions = [
         (ase=("SimpleMixing"), mixing=SimpleMixing, α=1.0),
-        (ase=("SimpleMixing", 0.4), mixing=SimpleMixing, α=0.4),
-        (ase=("KerkerMixing", 0.4, 0.7), mixing=KerkerMixing, α=0.4),
+        (ase=("SimpleMixing", Dict("α" => 0.4, )), mixing=SimpleMixing, α=0.4),
+        (ase=("KerkerMixing", Dict("α" => 0.4, "kF" => 0.7)),
+         mixing=KerkerMixing, α=0.4),
         (ase=("KerkerMixing"), mixing=KerkerMixing, α=0.8),
     ]
 
