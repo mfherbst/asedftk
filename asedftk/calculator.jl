@@ -5,7 +5,7 @@ import JSON
 import DFTK: PlaneWaveBasis, Model, self_consistent_field, load_psp
 import DFTK: load_lattice, load_atoms, ElementPsp, model_DFT, forces
 import DFTK: Smearing, kgrid_size_from_minimal_spacing, Vec3, Mat3
-import DFTK: KerkerMixing, SimpleMixing, scf_default_callback
+import DFTK: KerkerMixing, SimpleMixing, RestaMixing, ScfDefaultCallback
 
 ase_units = pyimport("ase.units")
 ase_io = pyimport("ase.io")
@@ -234,23 +234,26 @@ inputerror(s) = pyraise(calculator.InputError(s))
     end
 
     function get_dftk_mixing(self; basis=self.get_dftk_basis())
-        mixing = basis.model.temperature > 0 ? KerkerMixing(0.7, 1.0) : SimpleMixing(0.7)
+        mixing = basis.model.temperature > 0 ? KerkerMixing() : SimpleMixing(α=0.8)
         if !isnothing(self.parameters["mixing"])
             if self.parameters["mixing"] isa Tuple
                 name = self.parameters["mixing"][1]
-                args = ifelse(length(self.parameters["mixing"]) < 2, (),
-                              self.parameters["mixing"][2:end])
+                kwargs = ifelse(length(self.parameters["mixing"]) < 2, Dict(),
+                                self.parameters["mixing"][2:end])
+                kwargs = Dict(symbol(name) => value
+                            for (name, value) in pairs(kwargs))
             else
                 name = self.parameters["mixing"]
-                args = ()
+                kwargs = Dict()
             end
 
             valid_types = Dict("KerkerMixing" => KerkerMixing,
-                               "SimpleMixing" => SimpleMixing)
+                               "SimpleMixing" => SimpleMixing,
+                               "RestaMixing"  => RestaMixing)
             if !haskey(valid_types, name)
                 inputerror("A mixing method $name is not known to DFTK.")
             else
-                mixing = valid_types[name](args...)
+                mixing = valid_types[name](;kwargs...)
             end
         end
         mixing
@@ -266,7 +269,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
 
         callback = info -> ()
         if self.parameters["verbose"]
-            callback = scf_default_callback
+            callback = ScfDefaultCallback()
         end
 
         try
