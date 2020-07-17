@@ -32,7 +32,7 @@ inputerror(s) = pyraise(calculator.InputError(s))
     function __init__(self; atoms=nothing, label="dftk", kwargs...)
         self.default_parameters = Dict{String,Any}(
             "xc"          => "LDA",
-            "kpts"        => 0.25,
+            "kpts"        => 3.5,
             "smearing"    => nothing,
             "nbands"      => nothing,
             "charge"      => 0.0,
@@ -210,7 +210,9 @@ inputerror(s) = pyraise(calculator.InputError(s))
         kgrid = [1, 1, 1]
         kshift = [0, 0, 0]
         if kpts isa Number
-            kgrid = kgrid_size_from_minimal_spacing(model.lattice, kpts * ase_units.Bohr)
+            # DFTK uses k-point spacing whereas ASE uses k-point density
+            spacing = ase_units.Bohr / kpts
+            kgrid = kgrid_size_from_minimal_spacing(model.lattice, spacing)
         elseif length(kpts) == 3 && all(kpt isa Number for kpt in kpts)
             kgrid = kpts  # Just a plain MP grid
         elseif length(kpts) == 4 && all(kpt isa Number for kpt in kpts[1:3])

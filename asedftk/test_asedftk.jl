@@ -44,7 +44,7 @@ atoms = ase.Atoms(symbols='Mg2', pbc=True, cell=cell, positions=positions)
 end
 
 @testset "PBE semicore basis construction" begin
-    calc = asedftk.DFTK(;xc="PBE", kpts=0.3, smearing=("Gaussian", 10),
+    calc = asedftk.DFTK(;xc="PBE", kpts=3.333, smearing=("Gaussian", 10),
                         pps="hgh.k")  # semicore psps
     calc.atoms = py"atoms"
     basis = calc.get_dftk_basis()
@@ -66,7 +66,7 @@ end
     @test xcterm.functionals[2].identifier == :gga_c_pbe
 
     kgrid = DFTK.kgrid_size_from_minimal_spacing(basis.model.lattice,
-                                                 0.3 / DFTK.units.Ǎ)
+                                                 1 / 3.333DFTK.units.Ǎ)
     kcoords, ksymops = bzmesh_ir_wedge(kgrid, basis.model.symops)
     @test kcoords ≈ [kpt.coordinate for kpt in basis.kpoints]
 end
@@ -93,7 +93,7 @@ end
 
 @testset "Test kpoint options" begin
     kpointoptions = [
-        (ase=0.5,                length=18, kpt1=[0.0, 0.0, 0.0], kpt2=[ 1/5, 0.0, 0.0]),
+        (ase=2.0,                length=26, kpt1=[0.0, 0.0, 0.0], kpt2=[ 1/5, 0.0, 0.0]),
         (ase=[2, 3, 4],          length=12, kpt1=[0.0, 0.0, 0.0], kpt2=[-0.5, 0.0, 0.0]),
         (ase=[2, 3, 4, "gamma"], length=9,  kpt1=[1/4, 1/6, 0.0], kpt2=[-1/4, 1/6, 0.0]),
         (ase=[(0, 0.2, 0), (0.5, 0.2, 0.3)], length=2,
@@ -135,7 +135,7 @@ end
 
 @testset "Test mixing options" begin
     mixingoptions = [
-        (ase=("SimpleMixing"), mixing=SimpleMixing, α=1.0),
+        (ase=("SimpleMixing"), mixing=SimpleMixing, α=0.8),
         (ase=("SimpleMixing", Dict("α" => 0.4, )), mixing=SimpleMixing, α=0.4),
         (ase=("KerkerMixing", Dict("α" => 0.4, "kF" => 0.7)),
          mixing=KerkerMixing, α=0.4),
