@@ -1,6 +1,6 @@
 import warnings
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 __license__ = "MIT"
 __author__ = ["Michael F. Herbst"]
 
