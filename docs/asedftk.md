@@ -31,7 +31,7 @@ from asedftk import DFTK
 import ase.build
 
 magnesium = ase.build.bulk("Mg")
-magnesium.calc = DFTK(xc="PBE", smearing=("Gaussian", 10), nbands=8, kpts=(5, 5, 5))
+magnesium.calc = DFTK(xc="PBE", smearing=("Gaussian", 0.027), kpts=(5, 5, 5))
 print("Magnesium energy: ", magnesium.get_potential_energy())
 print("Magnesium forces: ", magnesium.get_forces())
 ```
@@ -51,10 +51,10 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
   all [functionals from libxc](https://www.tddft.org/programs/libxc/functionals/),
   for example `"lda_x"`, `"GGA_X_B86"`, `"GGA_C_LYP"`.
 - **kpts**: k-point grid to use. Valid options are:
-	- `(n1,n2,n3)`: Monkhorst-Pack grid
+	- `(n1,n2,n3)`: (Unshifted) Monkhorst-Pack grid
 	- `(n1,n2,n3,"gamma")`: Shifted MP grid to contain the gamma point.
 	- `[(k11,k12,k13),(k21,k22,k23),...]`: Explicit k-Point list in units of the reciprocal lattice vectors
-	- `3.5` (or any float): k-point density as in `3.5` kpoints per Ǎngström.
+    - `3.5` (or any float): k-point density as in `3.5` kpoints per Ǎngström.
 - **mixing**: Mixing scheme used during SCF iterations. Examples for valid options:
 	- `("SimpleMixing", dict(α=0.7))`: Simple mixing with damping `0.7`
 	- `("KerkerMixing", dict(α=0.7, kF=1.0))`: Kerker mixing with damping `α = 0.7` and
