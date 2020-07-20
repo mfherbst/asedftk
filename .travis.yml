@@ -41,6 +41,7 @@ jobs:
       env: BUILD_SDIST=true
       python: 3.6
     - os: osx
+      osx_image: xcode11.6
       language: ruby
 
 deploy:  # Note: This will only deploy sdist on linux!
