@@ -5,9 +5,10 @@ LINUX_URL=https://julialang-s3.julialang.org/bin/linux/x64/1.4/julia-1.4.2-linux
 LINUX_HASH=d77311be23260710e89700d0b1113eecf421d6cf31a9cebad3f6bdd606165c28
 
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-	export HOMEBREW_NO_INSTALL_CLEANUP=1
-	export HOMEBREW_NO_AUTO_UPDATE=1
-	brew cask install julia
+	:  # Done in .travis.yml
+	# export HOMEBREW_NO_INSTALL_CLEANUP=1
+	# export HOMEBREW_NO_AUTO_UPDATE=1
+	# brew cask install julia
 else
 	mkdir -p "$HOME/julia_binary"
 	pushd "$HOME/julia_binary"

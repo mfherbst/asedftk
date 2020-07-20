@@ -17,6 +17,11 @@ env:
   global:
     - JULIA_NUM_THREADS=2
 
+addons:
+  homebrew:
+    casks:
+    - julia
+
 install:
   # Code dependencies:
   - bash .ci/get_julia.sh
