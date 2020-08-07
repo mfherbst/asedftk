@@ -57,9 +57,9 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
     - `3.5` (or any float): k-point density as in `3.5` kpoints per Ǎngström.
 - **mixing**: Mixing scheme used during SCF iterations. Examples for valid options:
 	- `("SimpleMixing", dict(α=0.7))`: Simple mixing with damping `0.7`
-	- `("KerkerMixing", dict(α=0.7, kF=1.0))`: Kerker mixing with damping `α = 0.7` and
-	  screening parameter `kF = 1.0`. Applies the operator kernel
-	  `α * G^2 / (kF^2 + G^2)` for a wave vector `G` in frequency space.
+	- `("KerkerMixing", dict(α=0.7, kTF=1.0))`: Kerker mixing with damping `α = 0.7` and
+	  screening parameter `kTF = 1.0`. Applies the operator kernel
+	  `α * G^2 / (kTF^2 + G^2)` for a wave vector `G` in frequency space.
 - **nbands**: Number of bands to compute
 - **pps**: Pseudopotential family. Currently the only choices are `"hgh"`
   (Goedecker-type pseudos) and `"hgh.k"` (semi-core version of `"hgh"`).
