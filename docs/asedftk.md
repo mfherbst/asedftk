@@ -36,6 +36,34 @@ print("Magnesium energy: ", magnesium.get_potential_energy())
 print("Magnesium forces: ", magnesium.get_forces())
 ```
 
+### Hydrogen geometry optimisation
+```python
+from asedftk import DFTK
+import ase.build
+from ase.optimize import BFGS
+
+h2 = ase_build.molecule("H2", pbc=true, vacuum=10)
+h2.set_positions([[10 10 11.0]; [10 10 10]])
+h2.calc = DFTKcalc(verbose=true, scftol=1e-6, xc="PBE", kpts=[1, 1, 1], ecut=50)
+
+dyn = BFGS(h2, trajectory="H2.traj")
+dyn.run(fmax=0.05)
+```
+or if you prefer Julia code:
+```julia
+using PyCall
+DFTKcalc = pyimport("asedftk").DFTK
+ase_build = pyimport("ase.build")
+BFGS = pyimport("ase.optimize").BFGS
+
+h2 = ase_build.molecule("H2", pbc=true, vacuum=10)
+h2.set_positions([[10 10 11.0]; [10 10 10]])
+h2.calc = DFTKcalc(verbose=true, scftol=1e-6, xc="PBE", kpts=[1, 1, 1], ecut=50)
+
+dyn = BFGS(h2, trajectory="H2.traj")
+dyn.run(fmax=0.05)
+```
+
 ## DFTK parameters
 The `asedftk.DFTK` class supports a couple of parameters
 to customise the calculation,
@@ -78,11 +106,16 @@ Still there are a few rough edges,
 which are worth knowing when working with asedftk:
 
 - **Threading:** DFTK makes use of Julia's threading framework.
-  This means that by default it runs single-threaded.
-  To benefit from a multi-core CPU you need to explicitly set
-  the environment variable `JULIA_NUM_THREADS`
-  to a value above 1 *before* using asedftk,
-  i.e. before even starting the script.
+  For details on the parameters, which influence threading in DFTK,
+  see [the DFTK documentation](https://docs.dftk.org/dev/guide/parallelisation/).
+  To set BLAS and FFTW threads from python use:
+  ```
+  from julia.LinearAlgebra import BLAS
+  from julia import FFTW
+
+  FFTW.set_num_threads(N)
+  BLAS.set_num_threads(N)
+  ```
 - On Debian and Ubuntu the use of the `python-jl` wrapper script
   is unfortunately necessary due to the `python` executable being
   statically linked to the libpython.
