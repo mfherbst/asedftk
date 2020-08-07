@@ -39,19 +39,23 @@ print("Magnesium forces: ", magnesium.get_forces())
 ### Hydrogen geometry optimisation
 Using the ASE optimiser from python:
 ```python
+# Python
 from asedftk import DFTK
 import ase.build
 from ase.optimize import BFGS
 
-h2 = ase_build.molecule("H2", pbc=True, vacuum=10)
-h2.set_positions([[10 10 11.0]; [10 10 10]])
-h2.calc = DFTK(verbose=true, scftol=1e-6, xc="PBE", kpts=[1, 1, 1], ecut=50)
+h2 = ase.build.molecule("H2", pbc=True, vacuum=10)
+h2.set_positions([[10, 10, 11.0], [10, 10, 10]])
+h2.calc = DFTK(scftol=1e-6, xc="PBE", kpts=[1, 1, 1], ecut=50)
 
 dyn = BFGS(h2, trajectory="H2.traj")
 dyn.run(fmax=0.05)
+
+print("H-H distance: ", h2.get_distance(0, 1))
 ```
 Alternatively using a Julia script (and `PyCall`) to drive the optimisation:
 ```julia
+# Julia
 using PyCall
 DFTKcalc = pyimport("asedftk").DFTK
 ase_build = pyimport("ase.build")
@@ -59,10 +63,12 @@ BFGS = pyimport("ase.optimize").BFGS
 
 h2 = ase_build.molecule("H2", pbc=true, vacuum=10)
 h2.set_positions([[10 10 11.0]; [10 10 10]])
-h2.calc = DFTKcalc(verbose=true, scftol=1e-6, xc="PBE", kpts=[1, 1, 1], ecut=50)
+h2.calc = DFTKcalc(scftol=1e-6, xc="PBE", kpts=[1, 1, 1], ecut=50)
 
 dyn = BFGS(h2, trajectory="H2.traj")
 dyn.run(fmax=0.05)
+
+println("H-H distance: ", h2.get_distance(0, 1))
 ```
 
 ## DFTK parameters
