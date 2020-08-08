@@ -25,6 +25,7 @@ addons:
 install:
   # Code dependencies:
   - bash .ci/get_julia.sh
+  - travis_retry pip3 install "matplotlib =3.2.2"
   - travis_retry pip3 install -r requirements.txt
   - python3 -c "import asedftk; asedftk.install()"
   # Test dependencies:
