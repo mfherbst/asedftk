@@ -28,7 +28,7 @@ install:
   - travis_retry pip3 install -r requirements.txt
   - python3 -c "import asedftk; asedftk.install()"
   # Test dependencies:
-  - pip3 install "pytest == 4.3.1"
+  - pip3 install "pytest == 4.3.1"  # Newer version caused segfaults
   - julia -e 'import Pkg; Pkg.add("Test")'
 
 script:
