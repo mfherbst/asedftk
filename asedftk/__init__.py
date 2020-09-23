@@ -17,12 +17,10 @@ def check_julia():
     try:
         from julia import Main
 
-        # XXX Brew only has julia 1.3.0, so we still need to be compatible
-        #     with it, but we really should not ...
-        julia_compatible = Main.eval('VERSION >= v"1.3.0"')
+        julia_compatible = Main.eval('VERSION >= v"1.4.0"')
         if not julia_compatible:
             raise ImportError("Your Julia version is too old. "
-                              "At least 1.3.0 required")
+                              "At least 1.4.0 required")
         return julia_compatible
     except julia.core.UnsupportedPythonError as e:
         string = ("\n\nIssues between python and Julia. Try to resolve by installing "
@@ -37,13 +35,10 @@ def dftk_version():
     """
     from julia import Main, Pkg  # noqa: F811, F401
 
-    if Main.eval('VERSION >= v"1.4.0"'):
-        return Main.eval('''
-            string([package.version for (uuid, package) in Pkg.dependencies()
-                    if package.name == "DFTK"][end])
-        ''')
-    else:
-        return COMPATIBLE_DFTK[0] + ".0"  # Well actually we just can't determine it
+    return Main.eval('''
+        string([package.version for (uuid, package) in Pkg.dependencies()
+                if package.name == "DFTK"][end])
+    ''')
 
 
 def has_compatible_dftk():
