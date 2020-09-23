@@ -142,16 +142,17 @@ end
 @testset "Test mixing options" begin
     mixingoptions = [
         (ase=("SimpleMixing"), mixing=SimpleMixing, α=0.8),
-        (ase=("SimpleMixing", Dict("α" => 0.4, )), mixing=SimpleMixing, α=0.4),
+        (ase=("SimpleMixing", Dict("α" => 0.4, )),
+         mixing=SimpleMixing, α=0.4),
         (ase=("KerkerMixing", Dict("α" => 0.4, "kTF" => 0.7)),
          mixing=KerkerMixing, α=0.4),
         (ase=("KerkerMixing"), mixing=KerkerMixing, α=0.8),
         (ase=("DielectricMixing"), mixing=DielectricMixing, α=0.8),
-        (ase=("DielectricMixing", Dict("α" => 0.2, "kTF" => 0.7, "εr" => 8.0),
-              mixing=DielectricMixing, α=0.2)),
+        (ase=("DielectricMixing", Dict("α" => 0.2, "kTF" => 0.7, "εr" => 8.0)),
+         mixing=DielectricMixing, α=0.2),
         (ase=("HybridMixing"), mixing=HybridMixing, α=0.8),
-        (ase=("HybridMixing", Dict("α" => 0.2, "kTF" => 0.7, "εr" => 8.0),
-              mixing=DielectricMixing, α=0.2)),
+        (ase=("HybridMixing", Dict("α" => 0.2, "kTF" => 0.7, "εr" => 8.0)),
+         mixing=DielectricMixing, α=0.2),
     ]
 
     for params in mixingoptions
