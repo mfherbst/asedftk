@@ -5,7 +5,7 @@ import JSON
 import DFTK: PlaneWaveBasis, Model, self_consistent_field, load_psp
 import DFTK: load_lattice, load_atoms, ElementPsp, model_DFT, forces
 import DFTK: Smearing, kgrid_size_from_minimal_spacing, Vec3, Mat3
-import DFTK: KerkerMixing, SimpleMixing, RestaMixing, ScfDefaultCallback
+import DFTK: KerkerMixing, SimpleMixing, DielectricMixing, HybridMixing, ScfDefaultCallback
 
 ase_units = pyimport("ase.units")
 ase_io = pyimport("ase.io")
@@ -251,7 +251,8 @@ inputerror(s) = pyraise(calculator.InputError(s))
 
             valid_types = Dict("KerkerMixing" => KerkerMixing,
                                "SimpleMixing" => SimpleMixing,
-                               "RestaMixing"  => RestaMixing)
+                               "DielectricMixing"  => DielectricMixing,
+                               "HybridMixing"  => HybridMixing)
             if !haskey(valid_types, name)
                 inputerror("A mixing method $name is not known to DFTK.")
             else
@@ -309,3 +310,5 @@ inputerror(s) = pyraise(calculator.InputError(s))
 end
 
 end
+
+asedftk.DFTK

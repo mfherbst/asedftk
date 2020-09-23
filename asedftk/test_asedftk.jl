@@ -1,8 +1,14 @@
 using Test
 using PyCall
+
+print("Using DFTK ... ")  # Print something to avoid running into travis timeout
 using DFTK
+println("done")
+
+print("Including calculator ...")
 bulk = pyimport("ase.build").bulk
 include("calculator.jl")
+println("done")
 
 
 py"""
