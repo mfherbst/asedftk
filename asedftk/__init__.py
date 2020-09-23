@@ -66,7 +66,6 @@ def install(*args, **kwargs):
 
         Pkg.add("JSON")
         Pkg.add(Pkg.PackageSpec(name="DFTK", version=COMPATIBLE_DFTK[-1]))
-        Pkg.precompile()
 
 
 __all__ = ["install", "dftk_version"]
