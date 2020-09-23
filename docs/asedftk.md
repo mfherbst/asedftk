@@ -95,6 +95,11 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
 	- `("KerkerMixing", dict(α=0.7, kTF=1.0))`: Kerker mixing with damping `α = 0.7` and
 	  screening parameter `kTF = 1.0`. Applies the operator kernel
 	  `α * G^2 / (kTF^2 + G^2)` for a wave vector `G` in frequency space.
+	- `("HybridMixing", dict(α=0.7, kTF=1.0, εr=10)`: LDOS mixing as described
+	  in [arXiv 2009.01665](https://arxiv.org/abs/2009.01665).
+	  If `εr=1` a plain LDOS mixing is used, for other values a model dielectric
+	  term is added as well. `kTF` is meaningless unless the model dielectric term
+	  is used.
 - **nbands**: Number of bands to compute
 - **pps**: Pseudopotential family. Currently the only choices are `"hgh"`
   (Goedecker-type pseudos) and `"hgh.k"` (semi-core version of `"hgh"`).

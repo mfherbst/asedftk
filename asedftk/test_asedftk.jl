@@ -146,6 +146,12 @@ end
         (ase=("KerkerMixing", Dict("α" => 0.4, "kTF" => 0.7)),
          mixing=KerkerMixing, α=0.4),
         (ase=("KerkerMixing"), mixing=KerkerMixing, α=0.8),
+        (ase=("DielectricMixing"), mixing=DielectricMixing, α=0.8),
+        (ase=("DielectricMixing", Dict("α" => 0.2, "kTF" => 0.7, "εr" => 8.0),
+              mixing=DielectricMixing, α=0.2)),
+        (ase=("HybridMixing"), mixing=HybridMixing, α=0.8),
+        (ase=("HybridMixing", Dict("α" => 0.2, "kTF" => 0.7, "εr" => 8.0),
+              mixing=DielectricMixing, α=0.2)),
     ]
 
     for params in mixingoptions
