@@ -310,3 +310,5 @@ inputerror(s) = pyraise(calculator.InputError(s))
 end
 
 end
+
+asedftk.DFTK
