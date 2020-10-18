@@ -23,12 +23,11 @@ to provide a
 compatible with [ASE](https://wiki.fysik.dtu.dk/ase/index.html),
 the atomistic simulation environment.
 
-DFTK is a small library of Julia algorithms
-for experimentation with plane-wave-based
-density-functional theory (PWDFT) methods.
-Its performance is on the same order of magnitude as established packages
-in the field. See [dftk.org](https://dftk.org) and
-the [DFTK documentation](https://juliamolsim.github.io/DFTK.jl/dev/) for more details.
+[DFTK](https://dftk.org) is a small library of Julia algorithms
+for developing plane-wave-based density-functional theory methods.
+Albeit only a good year of development it already has a [sizeable feature set](https://docs.dftk.org/dev/#package-features)
+and a performance on the same order as established packages in the field.
+See [dftk.org](https://dftk.org) and the [DFTK documentation](https://juliamolsim.github.io/DFTK.jl/dev/) for more details.
 
 ## Installation
 See the [installation instructions](https://github.com/mfherbst/asedftk/blob/master/docs/installation.md).
