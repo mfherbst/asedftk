@@ -7,9 +7,9 @@ and do not yet have a working Julia installation.
 
 1. Install Julia e.g. by [downloading the binary](https://julialang.org/downloads).
    The use of at least Julia **1.4** is required.
-1. Install asedftk using the [setup_asedftk.jl](../scripts/setup_asedftk.jl) script.
-   For this [download the script](../scripts/setup_asedftk.jl) and run it with Julia,
-   i.e. execute `/path/to/julia setup_asedftk.jl`.
+1. Install asedftk using the [setup_asedftk.jl](https://raw.githubusercontent.com/mfherbst/asedftk/master/scripts/setup_asedftk.jl) script.
+   For this [download the setup_asedftk.jl script](https://raw.githubusercontent.com/mfherbst/asedftk/master/scripts/setup_asedftk.jl) and run it with Julia,
+   i.e. execute `/path/to/bin/julia setup_asedftk.jl`.
    This automatically installs required Julia dependencies
    such as [DFTK.jl](https://dftk.org) and Python dependencies
    such as [PyJulia](https://pypi.org/project/julia/),
@@ -17,7 +17,7 @@ and do not yet have a working Julia installation.
    The latter are installed inside a conda environment managed
    by [Conda.jl](https://github.com/JuliaPy/Conda.jl/).
    If you have already used your Julia installation beforehand,
-   this might have side effects, see the note below.
+   this step might have side effects, see the note below.
 1. To use asedftk first activate Julia's conda environment using
    `conda activate ~/.julia/conda/3`, then use the `python-jl` wrapper
    whenever you want to run a python script making use of asedftk.
@@ -41,7 +41,7 @@ see option 2.
 
 ## Option 2: Using an external python environment
 
-This installation assumes that you already have Julia installed
+This installation assumes that you already have Julia (at least **1.4**) installed
 and the [PyCall.jl](https://github.com/JuliaPy/PyCall.jl) package
 uses an external python environment, where the python packages are
 managed using `pip`.
