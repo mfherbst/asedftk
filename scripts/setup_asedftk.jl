@@ -37,7 +37,7 @@ Conda.pip_interop(true)
 Conda.pip("install --upgrade", "asedftk")
 println()
 
-println("#\nasedftk installation completed in Conda environment $(Conda.ROOTENV)\n#")
+println("#\n# asedftk installation completed in Conda environment $(Conda.ROOTENV)\n#")
 println("To use asedftk employ either one of:")
 println("    * `conda activate $(Conda.ROOTENV)`\n      followed by `python-jl <script>`")
 println("    * directly `$(Conda.ROOTENV)/bin/python-jl <script>`")
