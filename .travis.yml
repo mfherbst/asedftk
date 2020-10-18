@@ -44,8 +44,10 @@ jobs:
       language: ruby
     # Test option 1 directly from Julia
     - language: julia
-      install: julia scripts/setup_asedftk.jl
-      script: julia -e 'include("asedftk/test_asedftk.jl")'
+      install: ""
+      script:
+        - julia scripts/setup_asedftk.jl
+        - julia -e 'include("asedftk/test_asedftk.jl")'
 
 deploy:  # Note: This will only deploy sdist on linux!
   skip_cleanup: true

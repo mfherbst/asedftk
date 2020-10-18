@@ -2,11 +2,11 @@
 
 # Make a startup config containing the ENV["PYTHON"] = "" in case the user
 # has none this far
-const CONFIG = abspath(first(DEPOT_PATH), "config")
-if !isfile(join(CONFIG, "startup.jl"))
-    mkpath(CONFIG)
-    open("startup.jl", "w") do fp
-        write(fp, raw"ENV["PYTHON"] = ""  # Added by setup_asedftk.jl\n")
+const CONFIG = abspath(first(DEPOT_PATH), "config", "startup.jl")
+if !isfile(CONFIG)
+    mkpath(dirname(CONFIG))
+    open(CONFIG, "w") do fp
+        write(fp, """ENV["PYTHON"] = ""  # Added by setup_asedftk.jl\n""")
     end
 elseif !isempty(get(ENV, "PYTHON", ""))
     errorstring = """
@@ -17,28 +17,27 @@ elseif !isempty(get(ENV, "PYTHON", ""))
     error(strip(errorstring))
 end
 
-# Setup Conda and Julia packages
+println("#\n# Updating Julia dependencies\n#")
 ENV["PYTHON"] = ""
 ENV["PYTHONPATH"] = ""
 import Pkg
 Pkg.add(Pkg.PackageSpec(name="Conda", rev="master"))  # For now need Conda from master
 Pkg.add(["PyCall", "JSON", "DFTK", "FFTW"])
 Pkg.update()
+println()
 
-# Add/update conda dependencies
+println("#\n# Updating Conda dependencies\n#")
 import Conda
 Conda.add(["ase"], channel="conda-forge")
 Conda.update()
+println()
 
-# Add/update pip dependencies
-if PyCall.ispynull(pyimport_e("asedftk"))
-    Conda.pip_interop(true)
-    Conda.pip("install", "asedftk")
-else
-    Conda.pip("install --upgrade --no-deps", "asedftk")
-end
+println("#\n# Updating Pip dependencies\n#")
+Conda.pip_interop(true)
+Conda.pip("install --upgrade", "asedftk")
+println()
 
-println("asedftk installation completed in Conda environment $(Conda.ROOTENV)")
+println("#\nasedftk installation completed in Conda environment $(Conda.ROOTENV)\n#")
 println("To use asedftk employ either one of:")
-println("    * `conda activate $(Conda.ROOTENV)`; followed by `python-jl <script>`")
+println("    * `conda activate $(Conda.ROOTENV)`\n      followed by `python-jl <script>`")
 println("    * directly `$(Conda.ROOTENV)/bin/python-jl <script>`")
