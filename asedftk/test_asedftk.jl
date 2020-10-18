@@ -98,7 +98,7 @@ end
 
 @testset "Test kpoint options" begin
     kpointoptions = [
-        (ase=2.0,                length=26, kpt1=[0.0, 0.0, 0.0], kpt2=[ 1/5, 0.0, 0.0]),
+        (ase=2.0,                length=18, kpt1=[0.0, 0.0, 0.0], kpt2=[ 1/5, 0.0, 0.0]),
         (ase=[2, 3, 4],          length=12, kpt1=[0.0, 0.0, 0.0], kpt2=[-0.5, 0.0, 0.0]),
         (ase=[2, 3, 4, "gamma"], length=9,  kpt1=[1/4, 1/6, 0.0], kpt2=[-1/4, 1/6, 0.0]),
         (ase=[(0, 0.2, 0), (0.5, 0.2, 0.3)], length=2,
