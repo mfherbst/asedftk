@@ -8,7 +8,7 @@ calculator class,
 which allows to directly employ DFTK inside ASE workflows.
 
 ## Installation
-See the [README](../README.md#installation).
+See the [installation instructions](installation.md).
 
 ## Some examples
 The best way to explain asedftk is by some examples:

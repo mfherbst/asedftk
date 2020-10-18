@@ -31,27 +31,7 @@ in the field. See [dftk.org](https://dftk.org) and
 the [DFTK documentation](https://juliamolsim.github.io/DFTK.jl/dev/) for more details.
 
 ## Installation
-1. Install Julia e.g. by [downloading the binary](https://julialang.org/downloads).
-   The use of at least Julia **1.4** is required.
-   It is highly recommended you install Julia *before* installing asedftk.
-2. Install asedftk from [PyPi](https://pypi.org/project/asedftk):
-   ```
-   pip install asedftk
-   ```
-   This automatically installs the [PyJulia](https://pypi.org/project/julia/) package,
-   which allows Julia and Python codes to interoperate with each other.
-3. Install the Julia dependencies of asedftk:
-   ```
-   python3 -c "import asedftk; asedftk.install()"
-   ```
-4. That's it, you're all set. But **please note**:
-   Due to [some limitations](https://pyjulia.readthedocs.io/en/stable/troubleshooting.html#your-python-interpreter-is-statically-linked-to-libpython)
-   in some Linux distros like Debian or Ubuntu
-   you might need to run your Python scripts
-   with the `python-jl` wrapper if you want to use asedftk in them.
-   I.e. if you have written a calculation script `script.py` you
-   might need to start it as `python-jl script.py`
-   in order to be able to use asedftk.
+See the [installation instructions](https://github.com/mfherbst/asedftk/blob/master/docs/installation.md).
 
 ## Basic usage
 `asedftk.DFTK` is basically a class wrapping around DFTK and making it an
