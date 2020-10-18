@@ -13,9 +13,10 @@ and do not yet have a working Julia installation.
    This automatically installs required Julia dependencies
    such as [DFTK.jl](https://dftk.org) and Python dependencies
    such as [PyJulia](https://pypi.org/project/julia/),
-   which allows Julia and Python codes to interoperate with each other.
-   The latter are installed inside a conda environment managed
-   by [Conda.jl](https://github.com/JuliaPy/Conda.jl/).
+   which is a package to allow
+   Julia and Python codes to interoperate with each other.
+   The python dependencies are installed inside the conda environment
+   managed by [Conda.jl](https://github.com/JuliaPy/Conda.jl/).
    If you have already used your Julia installation beforehand,
    this step might have side effects, see the note below.
 1. To use asedftk first activate Julia's conda environment using
