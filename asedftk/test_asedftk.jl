@@ -41,9 +41,8 @@ atoms = ase.Atoms(symbols='Mg2', pbc=True, cell=cell, positions=positions)
     @test basis.model.smearing isa DFTK.Smearing.None
     @test basis.model.spin_polarization == :none
 
-    xcterm = [tt for tt in basis.model.term_types if tt isa Xc][1]
-    @test length(xcterm.functionals) == 1
-    @test xcterm.functionals[1].identifier == :lda_xc_teter93
+    xcterm = only(tt for tt in basis.model.term_types if tt isa Xc)
+    @test only(xcterm.functionals) == :lda_xc_teter93
 
     @test length(basis.kpoints) == 4
     @test basis.Ecut ≈ 300 * DFTK.units.eV atol=1e-8
@@ -66,10 +65,10 @@ end
     @test basis.model.smearing isa DFTK.Smearing.Gaussian
     @test basis.model.spin_polarization == :none
 
-    xcterm = [tt for tt in basis.model.term_types if tt isa Xc][1]
+    xcterm = only(tt for tt in basis.model.term_types if tt isa Xc)
     @test length(xcterm.functionals) == 2
-    @test xcterm.functionals[1].identifier == :gga_x_pbe
-    @test xcterm.functionals[2].identifier == :gga_c_pbe
+    @test xcterm.functionals[1] == :gga_x_pbe
+    @test xcterm.functionals[2] == :gga_c_pbe
 
     kgrid = DFTK.kgrid_size_from_minimal_spacing(basis.model.lattice,
                                                  1 / 3.333DFTK.units.Ǎ)
@@ -87,10 +86,10 @@ end
     @test basis.model.smearing isa DFTK.Smearing.FermiDirac
     @test basis.model.spin_polarization == :none
 
-    xcterm = [tt for tt in basis.model.term_types if tt isa Xc][1]
+    xcterm = only(tt for tt in basis.model.term_types if tt isa Xc)
     @test length(xcterm.functionals) == 2
-    @test xcterm.functionals[1].identifier == :gga_x_pbe
-    @test xcterm.functionals[2].identifier == :gga_c_pbe
+    @test xcterm.functionals[1] == :gga_x_pbe
+    @test xcterm.functionals[2] == :gga_c_pbe
 
     @test length(basis.kpoints) == 2
     @test Float64.(basis.kpoints[1].coordinate) ≈ [kpts[1]...]
