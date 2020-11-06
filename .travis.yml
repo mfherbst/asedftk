@@ -1,4 +1,9 @@
-language: python
+branches:
+  only:
+    # Only build master and version tags
+    - master
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+
 cache:
   directories:
     - "$HOME/.cache/pip"
@@ -7,47 +12,26 @@ cache:
 notifications:
   email: false
 
-branches:
-  only:
-    # Only build master and version tags
-    - master
-    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
-
-env:
-  global:
-    - JULIA_NUM_THREADS=2
-
-addons:
-  homebrew:
-    casks:
-    - julia
-
-install:
-  - bash .ci/get_julia.sh
-  # Option 2 to install dependencies:
-  - travis_retry pip3 install -r requirements.txt
-  - python3 -c "import asedftk; asedftk.install()"
-  # Test dependencies:
-  - pip3 install "pytest == 4.3.1"  # Newer version caused segfaults
-
-script:
-  - julia -e 'include("asedftk/test_asedftk.jl")'
-  - python-jl -m pytest
-
 jobs:
   include:
-    - stage: test
-      env: BUILD_SDIST=true
-      python: 3.6
-    - os: osx
-      osx_image: xcode11.6
-      language: ruby
-    # Test install option 1 directly from Julia
+    # Install option 1: Installation from Julia & Julia tests
     - language: julia
-      install: ""
       script:
         - julia scripts/setup_asedftk.jl
         - julia -e 'include("asedftk/test_asedftk.jl")'
+    #
+    # Install option 2: Installation via pip & python tests
+    - language: python
+      python: 3.6
+      env: BUILD_SDIST=true
+      install:
+        - bash .ci/get_julia.sh
+        - travis_retry pip3 install -r requirements.txt
+        - python3 -c "import asedftk; asedftk.install()"
+        # Test dependencies:
+        - pip3 install "pytest == 4.3.1"  # Newer version caused segfaults
+      script:
+        - python-jl -m pytest
 
 deploy:  # Note: This will only deploy sdist on linux!
   skip_cleanup: true
