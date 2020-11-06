@@ -21,8 +21,7 @@ println("#\n# Updating Julia dependencies\n#")
 ENV["PYTHON"] = ""
 ENV["PYTHONPATH"] = ""
 import Pkg
-Pkg.add(Pkg.PackageSpec(name="Conda", rev="master"))  # For now need Conda from master
-Pkg.add(["PyCall", "JSON", "DFTK", "FFTW"])
+Pkg.add(["Conda", "PyCall", "JSON", "DFTK", "FFTW"])
 Pkg.update()
 println()
 

@@ -149,16 +149,17 @@ end
         (ase=("DielectricMixing"), mixing=DielectricMixing, α=0.8),
         (ase=("DielectricMixing", Dict("α" => 0.2, "kTF" => 0.7, "εr" => 8.0)),
          mixing=DielectricMixing, α=0.2),
-        (ase=("HybridMixing"), mixing=HybridMixing, α=0.8),
+        # HybridMixing gets translated to DFTK.χ0Mixing internally
+        (ase=("HybridMixing"), mixing=χ0Mixing, α=0.8),
         (ase=("HybridMixing", Dict("α" => 0.2, "kTF" => 0.7, "εr" => 8.0)),
-         mixing=HybridMixing, α=0.2),
+         mixing=χ0Mixing, α=0.2),
     ]
 
     for params in mixingoptions
         calc = asedftk.DFTK(;mixing=params.ase)
         calc.atoms = py"atoms"
         mixing = calc.get_dftk_mixing()
-        @test mixing isa params.mixing
+        @test (mixing isa params.mixing)
         @test mixing.α == params.α
     end
 end

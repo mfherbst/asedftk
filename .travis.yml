@@ -42,7 +42,7 @@ jobs:
     - os: osx
       osx_image: xcode11.6
       language: ruby
-    # Test option 1 directly from Julia
+    # Test install option 1 directly from Julia
     - language: julia
       install: ""
       script:

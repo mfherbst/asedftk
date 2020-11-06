@@ -108,8 +108,8 @@ def test_hydrogen():
 #
 def test_trajectories():
     ENERGY = -30.38758246199375
-    FORCES = [[0.0, 0.0,  16.7078335],
-              [0.0, 0.0, -16.7078335]]
+    FORCES = [[0.0, 0.0,  1.88397764],
+              [0.0, 0.0, -1.88397764]]
 
     h2 = molecule('H2', pbc=True)
     h2.center(vacuum=2.0)

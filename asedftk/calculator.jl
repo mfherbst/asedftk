@@ -298,8 +298,21 @@ inputerror(s) = pyraise(calculator.InputError(s))
         if "forces" in properties
             # TODO If the calculation fails, ASE expects an
             #      calculator.CalculationFailed exception
-            fvalues = hcat((Array(d) for fatom in forces(scfres) for d in fatom)...)'
-            results["forces"] = fvalues * (ase_units.Hartree / ase_units.Bohr)
+            dftk_forces = forces(scfres)
+            n_atoms = sum(length, dftk_forces)
+
+            # TODO The next DFTK will have a compute_forces_cart
+            #      and the ase_atoms_translation_map function,
+            #      which should be used here.
+
+            # DFTK has forces as Hartree over fractional coordinates
+            # ASE wants forces as eV / Å
+            cart_forces = zeros(eltype(scfres.basis), n_atoms, 3)
+            lattice = scfres.basis.model.lattice  # lattice vectors in Bohr
+            for (i, atforce) in enumerate(Iterators.flatten(dftk_forces))
+                cart_forces[i, :] = lattice \ atforce
+            end
+            results["forces"] = cart_forces * (ase_units.Hartree / ase_units.Bohr)
         end
 
         # Commit results and dump them to disk:
