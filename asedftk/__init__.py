@@ -33,7 +33,8 @@ def dftk_version():
     """
     Get the version of the DFTK package installed Julia-side
     """
-    from julia import Main, Pkg  # noqa: F811, F401
+    from julia import Main  # noqa: F811, F401
+    from julia import Pkg  # noqa: F811, F401
 
     return Main.eval('''
         string([package.version for (uuid, package) in Pkg.dependencies()
@@ -60,7 +61,8 @@ def install(*args, **kwargs):
     julia.install(*args, **kwargs)
 
     try:
-        from julia import DFTK as jl_dftk, JSON  # noqa: F401
+        from julia import JSON  # noqa: F401
+        from julia import DFTK as jl_dftk  # noqa: F401
     except ImportError:
         from julia import Pkg  # noqa: F811
 

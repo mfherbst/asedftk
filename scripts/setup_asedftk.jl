@@ -21,7 +21,8 @@ println("#\n# Updating Julia dependencies\n#")
 ENV["PYTHON"] = ""
 ENV["PYTHONPATH"] = ""
 import Pkg
-Pkg.add(["Conda", "PyCall", "JSON", "DFTK", "FFTW"])
+Pkg.add(["Conda", "PyCall", "JSON"])
+Pkg.add(name="DFTK", version="0.1"); Pkg.pin("DFTK")
 Pkg.update()
 println()
 
