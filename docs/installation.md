@@ -6,7 +6,7 @@ It is best suited for users that do not yet have experience with Julia
 and do not yet have a working Julia installation.
 
 1. Install Julia e.g. by [downloading the binary](https://julialang.org/downloads).
-   The use of at least Julia **1.4** is required.
+   The use of at least Julia **1.5** is required.
 1. Install asedftk using the [setup_asedftk.jl](https://raw.githubusercontent.com/mfherbst/asedftk/master/scripts/setup_asedftk.jl) script.
    For this [download the setup_asedftk.jl script](https://raw.githubusercontent.com/mfherbst/asedftk/master/scripts/setup_asedftk.jl) and run it with Julia,
    i.e. execute `/path/to/bin/julia setup_asedftk.jl`.
