@@ -1,0 +1,62 @@
+name: CI
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    - cron:  '0 4 * * 6'  # Run every Sunday
+
+jobs:
+  julia:
+    name: Julia tests  # Installation from Julia & Julia tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: '1.4'
+      - uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts
+          key: ${{ runner.os }}-julia-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-julia-${{ env.cache-name }}-
+            ${{ runner.os }}-julia-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: julia scripts/setup_asedftk.jl
+      - name: Run Julia tests
+        run: julia -e 'include("asedftk/test_asedftk.jl")'
+
+  python:
+    name: Python tests  # Installation from Julia & Julia tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: '1.4'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+      - uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: |
+            ~/.julia/artifacts
+            ~/.cache/pip
+          key: ${{ runner.os }}-python-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-python-${{ env.cache-name }}-
+            ${{ runner.os }}-python-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: |
+          pip3 install -r requirements.txt
+          python3 -c "import asedftk; asedftk.install()"
+          pip3 install "pytest == 4.3.1"  # Newer version caused segfaults
+      - name: Run pytest tests
+        run: python-jl -m pytest

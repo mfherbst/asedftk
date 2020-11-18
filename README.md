@@ -1,8 +1,8 @@
 # DFTK-based calculator for ASE
 
-| **Documentation**                                       | **Build Status**              |  **Installation**         |
-|:------------------------------------------------------- |:----------------------------- |:------------------------- |
-| [![][docs-img]][docs-url] [![][gitter-img]][gitter-url] | [![][travis-img]][travis-url] | [![][pypi-img]][pypi-url] |
+| **Documentation**                                       | **Build Status**      |  **Installation**         |
+|:------------------------------------------------------- |:--------------------- |:------------------------- |
+| [![][docs-img]][docs-url] [![][gitter-img]][gitter-url] | [![][ci-img]][ci-url] | [![][pypi-img]][pypi-url] |
 
 [docs-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-url]: https://github.com/mfherbst/asedftk/blob/master/docs/asedftk.md
@@ -10,8 +10,8 @@
 [gitter-img]: https://badges.gitter.im/DFTK-jl/community.svg
 [gitter-url]: https://gitter.im/DFTK-jl/community
 
-[travis-img]: https://api.travis-ci.com/mfherbst/asedftk.svg?branch=master
-[travis-url]: https://travis-ci.com/mfherbst/asedftk
+[ci-img]: https://github.com/mfherbst/asedftk/workflows/CI/badge.svg?branch=master&event=push
+[ci-url]: https://github.com/mfherbst/asedftk/actions
 
 [pypi-img]: https://img.shields.io/pypi/v/asedftk
 [pypi-url]: https://pypi.org/project/asedftk
