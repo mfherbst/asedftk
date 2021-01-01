@@ -69,16 +69,14 @@ def install(*args, **kwargs):
         Pkg.add("JSON")
         Pkg.add(Pkg.PackageSpec(name="DFTK", version=COMPATIBLE_DFTK[-1]))
 
+from .calculator import DFTK
 
-__all__ = ["install", "dftk_version"]
-if not check_julia():
-    warnings.warn("Julia not found. Try to install Julia requirements "
-                  "using 'asedftk.install()'")
-elif not has_compatible_dftk():
-    warnings.warn("Could not find a compatible DFTK version. Maybe DFTK is not "
-                  "installed on the Julia side or is too old. Before you can "
-                  "use asedftk you have to update it using 'asedftk.install()'")
-else:
-    from .calculator import DFTK
+__all__ = ["install", "dftk_version", "DFTK"]
 
-    __all__ = ["install", "dftk_version", "DFTK"]
+# if not check_julia():
+#     warnings.warn("Julia not found. Try to install Julia requirements "
+#                   "using 'asedftk.install()'")
+# elif not has_compatible_dftk():
+#     warnings.warn("Could not find a compatible DFTK version. Maybe DFTK is not "
+#                   "installed on the Julia side or is too old. Before you can "
+#                   "use asedftk you have to update it using 'asedftk.install()'")

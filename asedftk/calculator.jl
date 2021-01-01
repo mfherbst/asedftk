@@ -1,6 +1,7 @@
 module asedftk
 using PyCall
 using LinearAlgebra
+import JLD2
 import JSON
 import DFTK: PlaneWaveBasis, Model, self_consistent_field, load_psp
 import DFTK: load_lattice, load_atoms, ElementPsp, model_DFT, forces
@@ -217,8 +218,8 @@ inputerror(s) = pyraise(calculator.InputError(s))
             kgrid = kpts  # Just a plain MP grid
         elseif length(kpts) == 4 && all(kpt isa Number for kpt in kpts[1:3])
             kpts[4] != "gamma" && inputerror("Unknown value to kpts: $kpts")
-            kshift = Int.(iseven.([2, 4, 5])) .// 2  # Shift MP grid to always contain Gamma
             kgrid = kpts[1:3]
+            kshift = Int.(iseven.(kgrid)) .// 2  # Shift MP grid to always contain Gamma
         elseif kpts isa AbstractArray
             kgrid = nothing
             kshift = nothing
