@@ -6,6 +6,23 @@ import json
 from ase.calculators.calculator import Calculator, CalculatorSetupError, Parameters
 from ase.calculators.calculator import register_calculator_class, all_changes
 
+
+
+def run_dftk(properties, inputfile, n_threads=1, n_mpi=1):
+    import subprocess
+
+    dftk_env = os.path.join(os.path.dirname(__file__), "dftk_environment")
+    runner = os.path.join(dftk_env, "run_calculation.jl")
+    subprocess.check_call(["julia", "--project", dftk_env, "-e", "'import Pkg; Pkg.instantiate()'"])
+
+    if n_mpi > 1:
+        # TODO
+        raise RuntimeError("")
+    else:
+        subprocess.check_call(["julia", "--project", dftk_env, "-t", n_threads, runner,
+                               properties, inputfile]
+
+
 class DFTK(Calculator):
     implemented_properties = ["energy", "forces"]
 
@@ -88,9 +105,7 @@ class DFTK(Calculator):
         self.write()
 
         # Run DFTK
-        commandline = "julia run_dftk.jl " + " ".join(properties) + " " + inputfile
-        # TODO Run commandline
-        # TODO mpirun, -nt --project
+        run_dftk(properties, inputfile, n_threads=1, n_mpi=1)
 
         # Read results
         self.read(self.label)
