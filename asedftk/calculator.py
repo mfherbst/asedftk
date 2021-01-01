@@ -90,6 +90,7 @@ class DFTK(Calculator):
         # Run DFTK
         commandline = "julia run_dftk.jl " + " ".join(properties) + " " + inputfile
         # TODO Run commandline
+        # TODO mpirun, -nt --project
 
         # Read results
         self.read(self.label)

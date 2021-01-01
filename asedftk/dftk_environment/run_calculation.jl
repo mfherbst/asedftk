@@ -2,13 +2,22 @@ using JSON
 using DFTK
 using PyCall
 using JLD2
-ase_io = pyimport("ase.io")
+using MPI
 
+
+function setup()
+    if DFTK.mpi_nprocs() > 1
+        DFTK.disable_threading()
+    else
+        DFTK.setup_threading()
+    end
+    DFTK.mpi_master() || (redirect_stdout(); redirect_stderr())
+end
 
 inputerror(parameters, p) = error("Unknown value to parameter $p: $(get(parameters, p, ""))")
 
 
-function get_dftk_model(parameters)
+function get_dftk_model(parameters, extra)
     # Parse psp and DFT functional parameters
     functionals = [:lda_xc_teter93]
     if lowercase(parameters["xc"]) == "lda"
@@ -67,16 +76,20 @@ function get_dftk_model(parameters)
     # Build DFTK atoms
     psploader(symbol) = load_psp(symbol, functional=psp_functional,
                                  family=psp_family, core=psp_core)
-    lattice = load_lattice(parameters["ase_atoms"])
+    ase_atoms = nothing
+    @pywith pyimport("io").StringIO(extra["atoms_json"]) as f begin
+        ase_atoms = pyimport("ase.io").read(f, format="json")
+    end
+    lattice = load_lattice(ase_atoms)
     atoms = [ElementPsp(element.symbol, psp=psploader(element.symbol)) => positions
-             for (element, positions) in load_atoms(parameters["ase_atoms"])]
+             for (element, positions) in load_atoms(ase_atoms)]
 
     model_DFT(lattice, atoms, functionals; temperature=temperature,
               smearing=smearing)
 end
 
 
-function get_dftk_basis(parameters; model=get_dftk_model(parameters))
+function get_dftk_basis(parameters, extra; model=get_dftk_model(parameters, extra))
     # Build kpoint mesh
     kpts = parameters["kpts"]
     kgrid = [1, 1, 1]
@@ -108,11 +121,11 @@ function get_dftk_basis(parameters; model=get_dftk_model(parameters))
 end
 
 
-function get_dftk_mixing(parameters; basis=get_dftk_basis(parameters))
+function get_dftk_mixing(parameters, extra; basis=get_dftk_basis(parameters, extra))
     mixing = basis.model.temperature > 0 ? KerkerMixing() : SimpleMixing(α=0.8)
 
     if !isnothing(parameters["mixing"])
-        if parameters["mixing"] isa Tuple
+        if parameters["mixing"] isa AbstractArray
             name   = parameters["mixing"][1]
             kwargs = ifelse(length(parameters["mixing"]) < 2, Dict(), parameters["mixing"][2])
             kwargs = Dict(Symbol(name) => value for (name, value) in pairs(kwargs))
@@ -135,7 +148,7 @@ function get_dftk_mixing(parameters; basis=get_dftk_basis(parameters))
 end
 
 
-function get_dftk_scfres(parameters; basis=get_dftk_basis(parameters))
+function get_dftk_scfres(parameters, extra; basis=get_dftk_basis(parameters, extra))
     mixing = get_dftk_mixing(parameters; basis=basis)
 
     extraargs = ()
@@ -143,24 +156,31 @@ function get_dftk_scfres(parameters; basis=get_dftk_basis(parameters))
         extraargs = (n_bands=parameters["nbands"], )
     end
 
-    callback = identity
-    parameters["verbose"] && (callback = DFTK.ScfDefaultCallback())
+    callback = DFTK.ScfSaveCheckpoints(extra["checkpointfile"])
+    if parameters["verbose"]
+        callback = callback ∘ DFTK.ScfDefaultCallback()
+    end
 
-    tol = parameters["scftol"]  # TODO Maybe unit conversion here!
-    self_consistent_field(basis; tol=tol, callback=callback,
+    self_consistent_field(basis; tol=parameters["scftol"], callback=callback,
                           mixing=mixing, extraargs...)
 end
 
 
 function load_state(file)
     endswith(file, ".json") || error("State file should end in .json")
-    state = open(JSON.parse, file)
 
-    @pywith pyimport("io").StringIO(state["atoms"]) as f begin
-        state["ase_atoms"] = ase_io.read(f, format="json")
+    # Read input data
+    if DFTK.mpi_master()
+        str = open(fp -> read(fp, String), file)
+    else
+        str = nothing
     end
+    MPI.bcast(str, 0, MPI.COMM_WORLD)
 
-    state
+    res = JSON.parse(str)
+    res["extra"] = Dict{String, Any}()
+    res["extra"]["atoms_json"] = res["atoms"]
+    res
 end
 
 
@@ -188,8 +208,10 @@ function save_state(file, state)
         "atoms"      => state["atoms"],
         "scfres"     => state["scfres"],
     )
-    open(file * ".json", "w") do fp
-        JSON.print(fp, save_dict)
+    if DFTK.mpi_master()
+        open(file, "w") do fp
+            JSON.print(fp, save_dict)
+        end
     end
     save_dict
 end
@@ -198,24 +220,41 @@ end
 function run_calculation(properties::AbstractArray, statefile::AbstractString)
     state = load_state(statefile)
     if !("scfres" in keys(state))
+        prefix = statefile[1:end-5] * ".$(abs(rand(Int16)))"
         state["scfres"] = statefile[1:end-5] * ".$(abs(rand(Int16))).scfres.jld2"
+    else
+        @assert endswith(state["scfres"], ".scfres.jld2")
+        prefix = state["scfres"][1:end-12]
     end
+    state["extra"]["checkpointfile"] = prefix * ".checkpoint.jld2"
 
     if !isfile(state["scfres"])
-        scfres = get_dftk_scfres(state["parameters"])
-        save_scfres(state["scfres"], scfres)
+        save_scfres(state["scfres"], get_dftk_scfres(state["parameters"], state["extra"]))
     end
     scfres = load_scfres(state["scfres"])
 
     state["results"]["energy"] = scfres.energies.total / DFTK.units.eV
-    if "forces" in "properties"
-        error("Forces not yet implemented.")
-        # TODO
-    end
+    if "forces" in properties
+        # TODO If the calculation fails, ASE expects an
+        #      calculator.CalculationFailed exception
+        forces = compute_forces_cart(scfres)
 
+        # DFTK has forces as Hartree over fractional coordinates
+        # ASE wants forces as eV / Å
+        n_atoms = sum(length, forces)
+        cart_forces = zeros(eltype(scfres.basis), n_atoms, 3)
+        for (i, atforce) in enumerate(Iterators.flatten(forces))
+            cart_forces[i, :] = atforce ./ (DFTK.units.eV / DFTK.units.Å)
+        end
+        state["results"]["forces"] = cart_forces
+    end
     save_state(statefile, state)
 end
 
 
-main() = run_calculation(ARGS[1:end-1], ARGS[end])
+function main()
+    setup()
+    run_calculation(ARGS[1:end-1], ARGS[end])
+end
+
 (abspath(PROGRAM_FILE) == @__FILE__) && main()
