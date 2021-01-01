@@ -195,10 +195,7 @@ function save_state(file, state)
 end
 
 
-function main()
-    properties = ARGS[1:end-1]
-    statefile  = ARGS[end]
-
+function run_calculation(properties::AbstractArray, statefile::AbstractString)
     state = load_state(statefile)
     if !("scfres" in keys(state))
         state["scfres"] = statefile[1:end-5] * ".$(abs(rand(Int16))).scfres.jld2"
@@ -220,4 +217,5 @@ function main()
 end
 
 
+main() = run_calculation(ARGS[1:end-1], ARGS[end])
 (abspath(PROGRAM_FILE) == @__FILE__) && main()

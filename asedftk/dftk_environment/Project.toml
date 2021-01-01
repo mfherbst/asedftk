@@ -1,0 +1,11 @@
+[deps]
+DFTK = "acf6eb54-70d9-11e9-0013-234b7a5f5337"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+
+[compat]
+DFTK = "0.1"
+JSON = "0.21"
+PyCall = "1"
