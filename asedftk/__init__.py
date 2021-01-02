@@ -1,82 +1,159 @@
-import warnings
-
 __version__ = "0.1.7"
 __license__ = "MIT"
 __author__ = ["Michael F. Herbst"]
 
-# List of all compatible DFTK major.minor versions
-COMPATIBLE_DFTK = ["0.1"]
+import io
+import os
+import json
+import subprocess
+
+import ase.io
+
+from ase.calculators.calculator import (CalculationFailed, Calculator,
+                                        CalculatorSetupError, Parameters,
+                                        all_changes, register_calculator_class)
+
+__all__ = ["DFTK"]
 
 
-def check_julia():
-    """
-    Is the 'julia' python package working properly?
-    """
-    import julia
-
+def julia(*args, **kwargs):
+    julia_exe = os.environ.get("JULIA", "julia")
+    dftk_env = os.path.join(os.path.dirname(__file__), "dftk_environment")
     try:
-        from julia import Main
-
-        julia_compatible = Main.eval('VERSION >= v"1.4.0"')
-        if not julia_compatible:
-            raise ImportError("Your Julia version is too old. "
-                              "At least 1.4.0 required")
-        return julia_compatible
-    except julia.core.UnsupportedPythonError as e:
-        string = ("\n\nIssues between python and Julia. Try to resolve by installing "
-                  "required Julia packages using\n"
-                  '    python3 -c "import asedftk; asedftk.install()"')
-        warnings.warn(str(e) + string)
+        args = [julia_exe, "--project=" + dftk_env, "--startup-file=no", *args]
+        return subprocess.check_call(args, **kwargs)
+    except FileNotFoundError:
+        raise RuntimeError(
+            "Julia not found. Please check that Julia is installed and "
+            "added to your PATH variable or otherwise point the JULIA "
+            "environment variable to the full path of your julia binary."
+        )
 
 
-def dftk_version():
-    """
-    Get the version of the DFTK package installed Julia-side
-    """
-    from julia import Main  # noqa: F811, F401
-    from julia import Pkg  # noqa: F811, F401
-
-    return Main.eval('''
-        string([package.version for (uuid, package) in Pkg.dependencies()
-                if package.name == "DFTK"][end])
-    ''')
-
-
-def has_compatible_dftk():
-    """
-    Do we have a compatible DFTK version installed?
-    """
+def check_julia_version(min_version="1.4.0"):
     try:
-        from julia import DFTK as jl_dftk  # noqa: F401
-    except ImportError:
-        return False
+        return julia("-e", f'VERSION < v"{min_version}" && Sys.exit(1)')
+    except subprocess.CalledProcessError:
+        raise RuntimeError(
+            f"Julia version below minimal version {min_version}. "
+            "Please upgrade."
+        )
 
-    version = dftk_version()
-    return any(version.split(".")[:2] == v.split(".") for v in COMPATIBLE_DFTK)
+
+def instantiate_environment():
+    return julia("-e", "import Pkg; Pkg.instantiate()")
 
 
-def install(*args, **kwargs):
-    import julia
+def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
+    check_julia_version()
+    instantiate_environment()
 
-    julia.install(*args, **kwargs)
+    thisdir = os.path.dirname(__file__)
+    script = os.path.join(thisdir, "dftk_environment", "run_calculation.jl")
+    logfile = os.path.splitext(inputfile)[0] + ".log"
 
-    try:
-        from julia import JSON  # noqa: F401
-        from julia import DFTK as jl_dftk  # noqa: F401
-    except ImportError:
-        from julia import Pkg  # noqa: F811
+    if n_mpi > 1:
+        # TODO
+        raise NotImplementedError("MPI")
+    else:
+        try:
+            with open(logfile, "w") as fp:
+                julia(*["-t", str(n_threads), script, *properties, inputfile],
+                      stderr=subprocess.STDOUT, stdout=fp)
+        except subprocess.CalledProcessError:
+            raise CalculationFailed(
+                f"DFTK calculation failed. See logfile {logfile} for details."
+            )
 
-        Pkg.add("JSON")
-        Pkg.add(Pkg.PackageSpec(name="DFTK", version=COMPATIBLE_DFTK[-1]))
 
-from .calculator import DFTK
+class DFTK(Calculator):
+    implemented_properties = ["energy", "forces"]
 
-__all__ = ["install", "dftk_version", "DFTK"]
+    def __init__(self, atoms=None, label="dftk", **kwargs):
+        self.default_parameters = {
+            "xc": "LDA",
+            "kpts": 3.5,
+            "smearing": None,
+            "nbands": None,
+            "charge": 0.0,
+            "functionals": None,
+            "pps": "hgh",
+            "scftol": 1e-5,
+            "ecut": 400,
+            "mixing": None,
+        }
+        self.scfres = None
+        super().__init__(label=label, **kwargs)
 
-# if not check_julia():
-#     warnings.warn("Julia not found. Try to install Julia requirements "
-#                   "using 'asedftk.install()'")
-# elif not has_compatible_dftk():
-#     warnings.warn("Could not find a compatible DFTK version. Maybe DFTK is not "
-#                   "installed on the Julia side or is too old. Before you can "
-#                   "use asedftk you have to update it using 'asedftk.install()'")
+    def reset(self):
+        # Reset internal state by purging all intermediates
+        super().reset()
+        if self.scfres and os.path.isfile(self.scfres):
+            os.unlink(self.scfres)
+            self.scfres = None
+
+    def read(self, label):
+        super().read(label)
+
+        with open(label + ".json", "r") as fp:
+            saved_dict = json.load(fp)
+        self.parameters = Parameters(saved_dict["parameters"])
+        self.results = saved_dict["results"]
+        self.scfres = saved_dict.get("scfres", None)
+
+        with io.StringIO(saved_dict["atoms"]) as fp:
+            self.atoms = ase.io.read(fp, format="json")
+
+    def write(self, label=None):
+        if label is None:
+            label = self.label
+        if self.atoms is None:
+            raise CalculatorSetupError("An Atoms object must be present "
+                                       "in the calculator to use write")
+
+        with io.StringIO() as fp:
+            ase.io.write(fp, self.atoms.copy(), format="json")
+            atoms_json = fp.getvalue()
+
+        with open(label + ".json", "w") as fp:
+            save_dict = {
+                "parameters": self.parameters,
+                "results": self.results,
+                "atoms": atoms_json,
+                "scfres": self.scfres,
+            }
+            json.dump(save_dict, fp)
+
+    def set(self, **kwargs):
+        changed_parameters = super().set(**kwargs)
+        if changed_parameters:
+            # Currently reset on all parameter changes
+            # TODO Improve
+            self.reset()
+        return changed_parameters
+
+    def check_state(self, atoms):
+        system_changes = super().check_state(atoms)
+        if "pbc" in system_changes:
+            # Ignore boundary conditions (we always use PBCs)
+            system_changes.remove("pbc")
+        return system_changes
+
+    def calculate(self, atoms=None, properties=["energy"],
+                  system_changes=all_changes):
+        super().calculate(atoms=atoms, properties=properties,
+                          system_changes=system_changes)
+
+        # Write input file
+        inputfile = self.label + ".json"
+        self.write()
+
+        # Run DFTK
+        run_calculation(properties, inputfile, n_threads=1, n_mpi=1)
+
+        # Read results
+        self.read(self.label)
+
+
+# ... and register it with ASE
+register_calculator_class("DFTK", DFTK)

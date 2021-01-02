@@ -149,18 +149,14 @@ end
 
 
 function get_dftk_scfres(parameters, extra; basis=get_dftk_basis(parameters, extra))
-    mixing = get_dftk_mixing(parameters; basis=basis)
+    mixing = get_dftk_mixing(parameters, extra; basis=basis)
 
     extraargs = ()
     if !isnothing(parameters["nbands"])
         extraargs = (n_bands=parameters["nbands"], )
     end
 
-    callback = DFTK.ScfSaveCheckpoints(extra["checkpointfile"])
-    if parameters["verbose"]
-        callback = callback ∘ DFTK.ScfDefaultCallback()
-    end
-
+    callback = DFTK.ScfSaveCheckpoints(extra["checkpointfile"]) ∘ DFTK.ScfDefaultCallback()
     self_consistent_field(basis; tol=parameters["scftol"], callback=callback,
                           mixing=mixing, extraargs...)
 end
@@ -219,7 +215,7 @@ end
 
 function run_calculation(properties::AbstractArray, statefile::AbstractString)
     state = load_state(statefile)
-    if !("scfres" in keys(state))
+    if !("scfres" in keys(state)) || isnothing(state["scfres"])
         prefix = statefile[1:end-5] * ".$(abs(rand(Int16)))"
         state["scfres"] = statefile[1:end-5] * ".$(abs(rand(Int16))).scfres.jld2"
     else
