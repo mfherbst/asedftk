@@ -62,6 +62,11 @@ def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
     update(always_run=False)
     script = os.path.join(environment(), "run_calculation.jl")
     logfile = os.path.splitext(inputfile)[0] + ".log"
+    if n_threads is None:
+        try:
+            n_threads = int(os.environ.get("JULIA_NUM_THREADS", "1"))
+        except ValueError:
+            n_threads = 1
 
     if n_mpi > 1:
         # TODO
@@ -93,7 +98,7 @@ class DFTK(Calculator):
             "ecut": 400,
             "mixing": None,
             "n_mpi": 1,
-            "n_threads": 1,
+            "n_threads": None,
         }
         self.scfres = None
         super().__init__(label=label, atoms=atoms, **kwargs)

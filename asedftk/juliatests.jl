@@ -1,5 +1,6 @@
 using Test
 using JSON
+using LinearAlgebra
 include("dftk_environment/run_calculation.jl")
 
 @testset "Basic LDA basis construction" begin
@@ -93,7 +94,7 @@ end
     kpointoptions = [
         (ase=2.0,                length=18, kpt1=[0.0, 0.0, 0.0], kpt2=[ 1/5, 0.0, 0.0]),
         (ase=[2, 3, 4],          length=12, kpt1=[0.0, 0.0, 0.0], kpt2=[-0.5, 0.0, 0.0]),
-        (ase=[2, 3, 4, "gamma"], length=9,  kpt1=[1/4, 1/6, 0.0], kpt2=[-1/4, 1/6, 0.0]),
+        (ase=[2, 3, 4, "gamma"], length=6,  kpt1=[1/4, 0.0, 1/8], kpt2=[ 1/4, 1/3, 1/8]),
         (ase=[(0, 0.2, 0), (0.5, 0.2, 0.3)], length=2,
          kpt1=[0, 0.2, 0], kpt2=[0.5, 0.2, 0.3]),
     ]
@@ -133,19 +134,17 @@ end
 
 @testset "Test mixing options" begin
     mixingoptions = [
-        (ase=("SimpleMixing"), mixing=SimpleMixing, α=0.8),
-        (ase=("SimpleMixing", Dict("α" => 0.4, )),
-         mixing=SimpleMixing, α=0.4),
-        (ase=("KerkerMixing", Dict("α" => 0.4, "kTF" => 0.7)),
-         mixing=KerkerMixing, α=0.4),
-        (ase=("KerkerMixing"), mixing=KerkerMixing, α=0.8),
-        (ase=("DielectricMixing"), mixing=DielectricMixing, α=0.8),
-        (ase=("DielectricMixing", Dict("α" => 0.2, "kTF" => 0.7, "εr" => 8.0)),
-         mixing=DielectricMixing, α=0.2),
+        (ase="SimpleMixing()",               mixing=SimpleMixing, α=0.8),
+        (ase="SimpleMixing(α=0.4)",          mixing=SimpleMixing, α=0.4),
+        (ase="KerkerMixing(α=0.4, kTF=0.7)", mixing=KerkerMixing, α=0.4),
+        (ase="KerkerMixing()",               mixing=KerkerMixing, α=0.8),
+        (ase="DielectricMixing()",           mixing=DielectricMixing, α=0.8),
+        (ase="DielectricMixing(α=0.2, kTF=0.7, εr=8.0)",
+                                             mixing=DielectricMixing, α=0.2),
         # HybridMixing gets translated to DFTK.χ0Mixing internally
-        (ase=("HybridMixing"), mixing=χ0Mixing, α=0.8),
-        (ase=("HybridMixing", Dict("α" => 0.2, "kTF" => 0.7, "εr" => 8.0)),
-         mixing=χ0Mixing, α=0.2),
+        (ase="HybridMixing()",               mixing=χ0Mixing, α=0.8),
+        (ase="HybridMixing(α=0.2, kTF=0.7, εr=8.0)",
+                                             mixing=χ0Mixing, α=0.2),
     ]
 
     for params in mixingoptions
@@ -165,7 +164,7 @@ end
 @testset "Silicon calculation" begin
     label = "silicon_dftk"
     ENERGY_PBE = -213.12688268374683  # eV
-    FORCES_PBE = [[0.0 0.0 0.0]; [0.0 0.0 0.0]]
+    FORCES_PBE = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
 
     state = load_state("si.json")
     state["parameters"] = Dict(state["parameters"]...,

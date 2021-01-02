@@ -1,6 +1,7 @@
 import os
 
-from asedftk import julia, DFTK
+from asedftk import DFTK, julia
+
 import ase
 import ase.build
 
@@ -24,4 +25,4 @@ def test_juliatests():
 
     # Run tests
     thisdir = os.path.dirname(__file__)
-    julia(os.path.join(thisdir, "runtests.jl"))
+    julia(os.path.join(thisdir, "juliatests.jl"))

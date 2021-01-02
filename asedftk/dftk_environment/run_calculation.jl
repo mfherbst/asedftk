@@ -122,29 +122,11 @@ end
 
 
 function get_dftk_mixing(parameters, extra; basis=get_dftk_basis(parameters, extra))
-    mixing = basis.model.temperature > 0 ? KerkerMixing() : SimpleMixing(α=0.8)
-
-    if !isnothing(parameters["mixing"])
-        if parameters["mixing"] isa AbstractArray
-            name   = parameters["mixing"][1]
-            kwargs = ifelse(length(parameters["mixing"]) < 2, Dict(), parameters["mixing"][2])
-            kwargs = Dict(Symbol(name) => value for (name, value) in pairs(kwargs))
-        else
-            name   = parameters["mixing"]
-            kwargs = Dict()
-        end
-
-        valid_types = Dict("KerkerMixing" => KerkerMixing,
-                           "SimpleMixing" => SimpleMixing,
-                           "DielectricMixing"  => DielectricMixing,
-                           "HybridMixing" => HybridMixing)
-        if !haskey(valid_types, name)
-            error("A mixing method $name is not known to DFTK.")
-        else
-            mixing = valid_types[name](;kwargs...)
-        end
+    if isnothing(parameters["mixing"])
+        basis.model.temperature > 0 ? KerkerMixing() : SimpleMixing(α=0.8)
+    else
+        include_string(Main, parameters["mixing"], @__FILE__)
     end
-    mixing
 end
 
 
@@ -189,7 +171,7 @@ function save_state(file, state)
     for (key, val) in pairs(state["results"])
         if val isa AbstractArray
             if ndims(val) == 2
-                save_results[key] = collect(eachrow(val))
+                save_results[key] = Vector.(eachrow(val))
                 continue
             elseif ndims(val) > 2
                 error("Arrays of dimension larger 2 not supported")
@@ -216,8 +198,8 @@ end
 function run_calculation(properties::AbstractArray, statefile::AbstractString)
     state = load_state(statefile)
     if !("scfres" in keys(state)) || isnothing(state["scfres"])
-        prefix = statefile[1:end-5] * ".$(abs(rand(Int16)))"
-        state["scfres"] = statefile[1:end-5] * ".$(abs(rand(Int16))).scfres.jld2"
+        prefix = statefile[1:end-5]  # * ".$(abs(rand(Int16)))"
+        state["scfres"] = prefix * ".scfres.jld2"
     else
         @assert endswith(state["scfres"], ".scfres.jld2")
         prefix = state["scfres"][1:end-12]
