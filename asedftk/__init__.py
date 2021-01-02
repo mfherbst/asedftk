@@ -13,14 +13,18 @@ from ase.calculators.calculator import (CalculationFailed, Calculator,
                                         CalculatorSetupError, Parameters,
                                         all_changes, register_calculator_class)
 
-__all__ = ["DFTK"]
+__all__ = ["DFTK", "update"]
+
+
+def environment():
+    return os.path.join(os.path.dirname(__file__), "dftk_environment")
 
 
 def julia(*args, **kwargs):
     julia_exe = os.environ.get("JULIA", "julia")
-    dftk_env = os.path.join(os.path.dirname(__file__), "dftk_environment")
     try:
-        args = [julia_exe, "--project=" + dftk_env, "--startup-file=no", *args]
+        args = [julia_exe, "--project=" + environment(),
+                "--startup-file=no", *args]
         return subprocess.check_call(args, **kwargs)
     except FileNotFoundError:
         raise RuntimeError(
@@ -40,16 +44,23 @@ def check_julia_version(min_version="1.4.0"):
         )
 
 
-def instantiate_environment():
-    return julia("-e", "import Pkg; Pkg.instantiate()")
+def update(always_run=True):
+    """
+    Update the installed Julia dependencies.
+    """
+    instantiation_file = os.path.join(environment(), "instantiated")
+    is_instantiated = os.path.isfile(instantiation_file)
+    if is_instantiated and not always_run:
+        return
+    check_julia_version()
+    julia("-e", "import Pkg; Pkg.instantiate(); Pkg.precompile()")
+    open(instantiation_file, "w").close()
 
 
 def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
     check_julia_version()
-    instantiate_environment()
-
-    thisdir = os.path.dirname(__file__)
-    script = os.path.join(thisdir, "dftk_environment", "run_calculation.jl")
+    update(always_run=False)
+    script = os.path.join(environment(), "run_calculation.jl")
     logfile = os.path.splitext(inputfile)[0] + ".log"
 
     if n_mpi > 1:
@@ -81,9 +92,11 @@ class DFTK(Calculator):
             "scftol": 1e-5,
             "ecut": 400,
             "mixing": None,
+            "n_mpi": 1,
+            "n_threads": 1,
         }
         self.scfres = None
-        super().__init__(label=label, **kwargs)
+        super().__init__(label=label, atoms=atoms, **kwargs)
 
     def reset(self):
         # Reset internal state by purging all intermediates
@@ -149,7 +162,10 @@ class DFTK(Calculator):
         self.write()
 
         # Run DFTK
-        run_calculation(properties, inputfile, n_threads=1, n_mpi=1)
+        n_threads = self.parameters["n_threads"]
+        n_mpi = self.parameters["n_mpi"]
+        run_calculation(properties, inputfile, n_threads=n_threads,
+                        n_mpi=n_mpi)
 
         # Read results
         self.read(self.label)
