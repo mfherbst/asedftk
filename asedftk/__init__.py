@@ -34,7 +34,7 @@ def julia(*args, **kwargs):
         )
 
 
-def check_julia_version(min_version="1.4.0"):
+def check_julia_version(min_version="1.5.0"):
     try:
         return julia("-e", f'VERSION < v"{min_version}" && Sys.exit(1)')
     except subprocess.CalledProcessError:
@@ -100,15 +100,14 @@ class DFTK(Calculator):
             "n_mpi": 1,
             "n_threads": None,
         }
-        self.scfres = None
+        self.scfres = label + ".scfres.jld2"
         super().__init__(label=label, atoms=atoms, **kwargs)
 
     def reset(self):
         # Reset internal state by purging all intermediates
         super().reset()
-        if self.scfres and os.path.isfile(self.scfres):
+        if os.path.isfile(self.scfres):
             os.unlink(self.scfres)
-            self.scfres = None
 
     def read(self, label):
         super().read(label)

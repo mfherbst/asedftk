@@ -197,13 +197,8 @@ end
 
 function run_calculation(properties::AbstractArray, statefile::AbstractString)
     state = load_state(statefile)
-    if !("scfres" in keys(state)) || isnothing(state["scfres"])
-        prefix = statefile[1:end-5]  # * ".$(abs(rand(Int16)))"
-        state["scfres"] = prefix * ".scfres.jld2"
-    else
-        @assert endswith(state["scfres"], ".scfres.jld2")
-        prefix = state["scfres"][1:end-12]
-    end
+    @assert endswith(state["scfres"], ".scfres.jld2")
+    prefix = state["scfres"][1:end-12]
     state["extra"]["checkpointfile"] = prefix * ".checkpoint.jld2"
 
     if !isfile(state["scfres"])

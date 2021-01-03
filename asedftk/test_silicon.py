@@ -1,6 +1,6 @@
-from numpy.testing import assert_allclose
-
 import asedftk
+
+from numpy.testing import assert_allclose
 
 from ase.build import bulk
 
