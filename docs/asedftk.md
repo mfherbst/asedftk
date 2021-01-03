@@ -91,11 +91,11 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
 	- `[(k11,k12,k13),(k21,k22,k23),...]`: Explicit k-Point list in units of the reciprocal lattice vectors
     - `3.5` (or any float): k-point density as in `3.5` kpoints per Ǎngström.
 - **mixing**: Mixing scheme used during SCF iterations. Examples for valid options:
-	- `("SimpleMixing", dict(α=0.7))`: Simple mixing with damping `0.7`
-	- `("KerkerMixing", dict(α=0.7, kTF=1.0))`: Kerker mixing with damping `α = 0.7` and
+	- `"SimpleMixing(α=0.7)"`: Simple mixing with damping `0.7`
+	- `"KerkerMixing(α=0.7, kTF=1.0)"`: Kerker mixing with damping `α = 0.7` and
 	  screening parameter `kTF = 1.0`. Applies the operator kernel
 	  `α * G^2 / (kTF^2 + G^2)` for a wave vector `G` in frequency space.
-	- `("HybridMixing", dict(α=0.7, kTF=1.0, εr=10)`: LDOS mixing as described
+	- `"HybridMixing(α=0.7, kTF=1.0, εr=10)"`: LDOS mixing as described
 	  in [arXiv 2009.01665](https://arxiv.org/abs/2009.01665).
 	  If `εr=1` a plain LDOS mixing is used, for other values a model dielectric
 	  term is added as well. `kTF` is meaningless unless the model dielectric term
@@ -111,27 +111,9 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
 	where in each case `width` is the width in eV and `n` is the Methfessel-Paxton order.
 - **verbose**: Make the SCF be more verbose and print some iteration information.
 - **xc**: Exchange-correlation functional, default is `LDA`, options are `LDA` or `PBE`.
-
-## Tips and tricks
-Generally combining Python and Julia codes (like this package does) is seamless.
-Still there are a few rough edges,
-which are worth knowing when working with asedftk:
-
-- **Threading:** DFTK makes use of Julia's threading framework.
-  For details on the parameters, which influence threading in DFTK,
-  see [the DFTK documentation](https://docs.dftk.org/dev/guide/parallelisation/).
-  To set BLAS and FFTW threads from python use:
-  ```
-  from julia.LinearAlgebra import BLAS
-  from julia import FFTW
-
-  FFTW.set_num_threads(N)
-  BLAS.set_num_threads(N)
-  ```
-- On Debian and Ubuntu the use of the `python-jl` wrapper script
-  is unfortunately necessary due to the `python` executable being
-  statically linked to the libpython.
-  See the [PyJulia documentation](https://pyjulia.readthedocs.io/en/stable/troubleshooting.html#your-python-interpreter-is-statically-linked-to-libpython)
-  for details.
-- There are a few more [smaller limitations](https://pyjulia.readthedocs.io/en/stable/limitations.html)
-  in the interoperation of Python and Julia you probably should give a read to be aware.
+- **n_mpi**: Number of MPI threads to employ when running DFTK.
+  Set this to a value between `1` and the number of irreducible k-Points.
+  See the [DFTK parallelization documentation](https://juliamolsim.github.io/DFTK.jl/stable/guide/parallelization/) for details.
+- **n_threads**: Number of Julia threads to employ when running DFTK.
+  Typically the best setting is to use only one thread (the default).
+  See the [DFTK parallelization documentation](https://juliamolsim.github.io/DFTK.jl/stable/guide/parallelization/) for details.
