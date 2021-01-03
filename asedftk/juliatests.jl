@@ -175,6 +175,7 @@ end
                                "nbands" => 12)
     save_state(label * ".json", state)
 
+    rm(state["scfres"], force=true)
     state = run_calculation(["energies", "forces"], label * ".json")
     @test state["results"]["energy"] ≈ ENERGY_PBE atol=1e-4 rtol=1e-4
     @test state["results"]["forces"] ≈ FORCES_PBE atol=1e-2
