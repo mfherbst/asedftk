@@ -1,9 +1,7 @@
 using JSON
 using DFTK
-using PyCall
 using JLD2
 using MPI
-
 
 function setup()
     if DFTK.mpi_nprocs() > 1
@@ -76,15 +74,10 @@ function get_dftk_model(parameters, extra)
     # Build DFTK atoms
     psploader(symbol) = load_psp(symbol, functional=psp_functional,
                                  family=psp_family, core=psp_core)
-    ase_atoms = nothing
-    @pywith pyimport("io").StringIO(extra["atoms_json"]) as f begin
-        ase_atoms = pyimport("ase.io").read(f, format="json")
-    end
-    lattice = load_lattice(ase_atoms)
     atoms = [ElementPsp(element.symbol, psp=psploader(element.symbol)) => positions
-             for (element, positions) in load_atoms(ase_atoms)]
+             for (element, positions) in extra["atoms"]]
 
-    model_DFT(lattice, atoms, functionals; temperature=temperature,
+    model_DFT(extra["lattice"], atoms, functionals; temperature=temperature,
               smearing=smearing)
 end
 
@@ -143,6 +136,19 @@ function get_dftk_scfres(parameters, extra; basis=get_dftk_basis(parameters, ext
                           mixing=mixing, extraargs...)
 end
 
+function parse_json_array(data::Dict)
+    # Simplistic parser for ndarrays as they are stored in ASE json files
+    shape, type, values = data["__ndarray__"]
+    shape = reverse(Int.(shape))  # row-major -> column-major
+    if type == "float64"
+        reshape(Float64.(values), shape...)
+    elseif type == "int64"
+        reshape(Int64.(values), shape...)
+    else
+        error("Type not implemented: $type")
+    end
+end
+
 
 function load_state(file)
     endswith(file, ".json") || error("State file should end in .json")
@@ -154,10 +160,33 @@ function load_state(file)
         str = nothing
     end
     MPI.bcast(str, 0, MPI.COMM_WORLD)
-
     res = JSON.parse(str)
+
+    # Parse atoms json
+    atoms_json = JSON.parse(res["atoms"])
+    if length(atoms_json["ids"]) != 1
+        @warn "Only parsing last atoms object in json. Ignoring all others"
+    end
+    atoms_id = string(atoms_json["ids"][end])
+
+    lattice_Ang   = parse_json_array(atoms_json[atoms_id]["cell"]["array"])
+    positions_Ang = parse_json_array(atoms_json[atoms_id]["positions"])
+    numbers       = parse_json_array(atoms_json[atoms_id]["numbers"])
+
+    atoms = []
+    positions_fractional = Array.(eachcol(lattice_Ang \ positions_Ang))
+    for (i, pos) in enumerate(positions_fractional)
+        id = findfirst(el_pos -> el_pos[1].Z == numbers[i], atoms)
+        if isnothing(id)
+            push!(atoms, ElementCoulomb(numbers[i]) => [pos])
+        else
+            push!(atoms[id][2], pos)
+        end
+    end
+
     res["extra"] = Dict{String, Any}()
-    res["extra"]["atoms_json"] = res["atoms"]
+    res["extra"]["lattice"]    = lattice_Ang * DFTK.units.Å
+    res["extra"]["atoms"]      = atoms
     res
 end
 

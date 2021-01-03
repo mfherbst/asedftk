@@ -48,13 +48,19 @@ def update(always_run=True):
     """
     Update the installed Julia dependencies.
     """
-    instantiation_file = os.path.join(environment(), "instantiated")
-    is_instantiated = os.path.isfile(instantiation_file)
-    if is_instantiated and not always_run:
+    updated_file = os.path.join(environment(), "last_updated")
+    project_file = os.path.join(environment(), "Project.toml")
+
+    # Update file is older than Project file
+    needs_update = (not os.path.isfile(updated_file)
+                    or os.stat(updated_file) < os.stat(project_file))
+
+    if not needs_update and not always_run:
         return
+
     check_julia_version()
-    julia("-e", "import Pkg; Pkg.instantiate(); Pkg.precompile()")
-    open(instantiation_file, "w").close()
+    julia("-e", "import Pkg; Pkg.instantiate(); Pkg.update(); Pkg.precompile()")
+    open(updated_file, "w").close()
 
 
 def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
