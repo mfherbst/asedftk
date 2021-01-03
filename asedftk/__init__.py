@@ -83,9 +83,11 @@ def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
                 julia(*["-t", str(n_threads), script, *properties, inputfile],
                       stderr=subprocess.STDOUT, stdout=fp)
         except subprocess.CalledProcessError:
-            raise CalculationFailed(
-                f"DFTK calculation failed. See logfile {logfile} for details."
-            )
+            msg = f"DFTK calculation failed. See logfile {logfile} for details."
+            if "CI" in os.environ:
+                with open(logfile, "r") as fp:
+                    msg += "\n\n" + fp.read()
+            raise CalculationFailed(msg)
 
 
 class DFTK(Calculator):
