@@ -8,7 +8,21 @@ calculator class,
 which allows to directly employ DFTK inside ASE workflows.
 
 ## Installation
-See the [installation instructions](installation.md).
+1. Install Julia e.g. by [downloading the binary](https://julialang.org/downloads).
+   The use of at least Julia **1.5** is required.
+1. Install asedftk from [PyPi](https://pypi.org/project/asedftk), for example
+   using pip:
+   ```
+   pip install asedftk
+   ```
+   Note: You can also use `pip` if you are managing your python packages
+   with anaconda (`conda install pip` followed by above command), but it
+   is not recommended to do this in the root anaconda environment.
+
+This will automatically install DFTK inside a separate Julia environment
+private to asedftk. Typically this DFTK version will be updated as needed.
+In case you need to do the update manually at some point, simply run
+`asedftk.update()`.
 
 ## Some examples
 The best way to explain asedftk is by some examples:
@@ -109,7 +123,6 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
 	- `('Gaussian', width)`
 	- `('Methfessel-Paxton', width, n)`
 	where in each case `width` is the width in eV and `n` is the Methfessel-Paxton order.
-- **verbose**: Make the SCF be more verbose and print some iteration information.
 - **xc**: Exchange-correlation functional, default is `LDA`, options are `LDA` or `PBE`.
 - **n_mpi**: Number of MPI threads to employ when running DFTK.
   Set this to a value between `1` and the number of irreducible k-Points.
@@ -117,3 +130,13 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
 - **n_threads**: Number of Julia threads to employ when running DFTK.
   Typically the best setting is to use only one thread (the default).
   See the [DFTK parallelization documentation](https://juliamolsim.github.io/DFTK.jl/stable/guide/parallelization/) for details.
+
+
+## Custom Julia environment for asedftk
+If you want to employ a custom Julia environment in combination with asedftk,
+for example to supply a modified DFTK,
+just point the environment variable `ASEDFTK_DFTK_ENVIRONMENT` to the folder with your
+custom environment.
+When doing this, ensure that the packages specified in asedftk's
+[Project.toml](../asedftk/dftk_environment/Project.toml)
+are available in your custom environment.
