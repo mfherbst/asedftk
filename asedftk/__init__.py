@@ -79,7 +79,7 @@ def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
 
     if n_mpi > 1:
         # TODO
-        raise NotImplementedError("MPI")
+        raise NotImplementedError("MPI not yet implemented. Please select n_mpi=1.")
     else:
         try:
             with open(logfile, "a") as fp:
