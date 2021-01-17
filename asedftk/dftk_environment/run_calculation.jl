@@ -2,6 +2,8 @@ using JSON
 using DFTK
 using JLD2
 using MPI
+using Unitful
+using UnitfulAtomic
 
 function setup()
     if DFTK.mpi_nprocs() > 1
@@ -61,7 +63,7 @@ function get_dftk_model(parameters, extra)
         else
             inputerror(parameters, "smearing")
         end
-        temperature = convert(Float64, psmear[2] * DFTK.units.eV)
+        temperature = convert(Float64, psmear[2] * u"eV")
     end
 
     if parameters["charge"] != 0.0
@@ -89,8 +91,7 @@ function get_dftk_basis(parameters, extra; model=get_dftk_model(parameters, extr
     kshift = [0, 0, 0]
     if kpts isa Number
         # DFTK uses k-point spacing whereas ASE uses k-point density
-        spacing = 1 / kpts / DFTK.units.Å
-        kgrid = kgrid_size_from_minimal_spacing(model.lattice, spacing)
+        kgrid = kgrid_size_from_minimal_spacing(model.lattice, 1 / kpts / u"Å")
     elseif length(kpts) == 3 && all(kpt isa Number for kpt in kpts)
         kgrid = kpts  # Just a plain MP grid
     elseif length(kpts) == 4 && all(kpt isa Number for kpt in kpts[1:3])
@@ -105,7 +106,7 @@ function get_dftk_basis(parameters, extra; model=get_dftk_model(parameters, extr
     end
 
     # Convert ecut to Hartree
-    Ecut = parameters["ecut"] * DFTK.units.eV
+    Ecut = parameters["ecut"] * u"eV"
     if isnothing(kgrid)
         PlaneWaveBasis(model, Ecut, kcoords, ksymops)
     else
@@ -185,7 +186,7 @@ function load_state(file)
     end
 
     res["extra"] = Dict{String, Any}()
-    res["extra"]["lattice"]    = lattice_Ang * DFTK.units.Å
+    res["extra"]["lattice"]    = lattice_Ang * austrip(1u"Å")
     res["extra"]["atoms"]      = atoms
     res
 end
@@ -235,7 +236,7 @@ function run_calculation(properties::AbstractArray, statefile::AbstractString)
     end
     scfres = load_scfres(state["scfres"])
 
-    state["results"]["energy"] = scfres.energies.total / DFTK.units.eV
+    state["results"]["energy"] = ustrip(auconvert(u"eV", scfres.energies.total))
     if "forces" in properties
         # TODO If the calculation fails, ASE expects an
         #      calculator.CalculationFailed exception
@@ -246,7 +247,7 @@ function run_calculation(properties::AbstractArray, statefile::AbstractString)
         n_atoms = sum(length, forces)
         cart_forces = zeros(eltype(scfres.basis), n_atoms, 3)
         for (i, atforce) in enumerate(Iterators.flatten(forces))
-            cart_forces[i, :] = atforce ./ (DFTK.units.eV / DFTK.units.Å)
+            cart_forces[i, :] = @. ustrip(auconvert(u"eV/Å", atforce))
         end
         state["results"]["forces"] = cart_forces
     end

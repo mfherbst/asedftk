@@ -22,11 +22,16 @@ def environment():
     return os.environ.get("ASEDFTK_DFTK_ENVIRONMENT", dftk_environment)
 
 
-def julia(*args, **kwargs):
+def julia(*args, n_mpi=1, **kwargs):
+    mpiargs = []
+    if n_mpi > 1:
+        raise NotImplementedError("MPI not yet implemented. Please select n_mpi=1.")
+        mpiargs = [get_mpiexecjl(), "--project=" + environment(), "-np", str(n_mpi)]
+
     julia_exe = os.environ.get("JULIA", "julia")
     try:
-        args = [julia_exe, "--project=" + environment(),
-                "--startup-file=no", *args]
+        args = mpiargs + [julia_exe, "--project=" + environment(),
+                          "--startup-file=no", *args]
         return subprocess.check_call(args, **kwargs)
     except FileNotFoundError:
         raise RuntimeError(
@@ -44,6 +49,10 @@ def check_julia_version(min_version="1.5.0"):
             f"Julia version below minimal version {min_version}. "
             "Please upgrade."
         )
+
+
+def get_mpiexecjl():
+    return julia("-E", 'joinpath(DEPOT_PATH[1], "bin", "mpiexecjl")')
 
 
 def update(always_run=True):
@@ -64,6 +73,11 @@ def update(always_run=True):
     julia("-e", "import Pkg; Pkg.instantiate(); Pkg.update(); Pkg.precompile()")
     open(updated_file, "w").close()
 
+    mpiexecjl = get_mpiexecjl()
+    if not os.path.isfile(mpiexecjl):
+        julia("-e", "import MPI; MPI.install_mpiexecjl(verbose=true)")
+        assert os.path.isfile(mpiexecjl)
+
 
 def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
     check_julia_version()
@@ -77,24 +91,20 @@ def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
         except ValueError:
             n_threads = 1
 
-    if n_mpi > 1:
-        # TODO
-        raise NotImplementedError("MPI not yet implemented. Please select n_mpi=1.")
-    else:
-        try:
-            with open(logfile, "a") as fp:
-                fp.write(f"#\n#--  {datetime.datetime.now()}\n#\n")
-                fp.flush()
-                julia(*["-t", str(n_threads), script, *properties, inputfile],
-                      stderr=subprocess.STDOUT, stdout=fp)
-                fp.flush()
-                fp.write("\n")
-        except subprocess.CalledProcessError:
-            msg = f"DFTK calculation failed. See logfile {logfile} for details."
-            if "CI" in os.environ:
-                with open(logfile, "r") as fp:
-                    msg += "\n\n" + fp.read()
-            raise CalculationFailed(msg)
+    try:
+        with open(logfile, "a") as fp:
+            fp.write(f"#\n#--  {datetime.datetime.now()}\n#\n")
+            fp.flush()
+            julia(*["-t", str(n_threads), script, *properties, inputfile],
+                  n_mpi=n_mpi, stderr=subprocess.STDOUT, stdout=fp)
+            fp.flush()
+            fp.write("\n")
+    except subprocess.CalledProcessError:
+        msg = f"DFTK calculation failed. See logfile {logfile} for details."
+        if "CI" in os.environ:
+            with open(logfile, "r") as fp:
+                msg += "\n\n" + fp.read()
+        raise CalculationFailed(msg)
 
 
 class DFTK(Calculator):
