@@ -50,7 +50,7 @@ function get_dftk_model(parameters, extra)
     end
 
     # Parse smearing and temperature
-    temperature = 0.0
+    temperature = 0.0u"eV"
     smearing = nothing
     if !isnothing(parameters["smearing"])
         psmear = parameters["smearing"]
@@ -63,7 +63,7 @@ function get_dftk_model(parameters, extra)
         else
             inputerror(parameters, "smearing")
         end
-        temperature = convert(Float64, psmear[2] * u"eV")
+        temperature = convert(Float64, psmear[2]) * u"eV"
     end
 
     if parameters["charge"] != 0.0
@@ -108,7 +108,7 @@ function get_dftk_basis(parameters, extra; model=get_dftk_model(parameters, extr
     # Convert ecut to Hartree
     Ecut = parameters["ecut"] * u"eV"
     if isnothing(kgrid)
-        PlaneWaveBasis(model, Ecut, kcoords, ksymops)
+        PlaneWaveBasis(model, austrip(Ecut), kcoords, ksymops)
     else
         PlaneWaveBasis(model, Ecut, kgrid=kgrid, kshift=kshift)
     end

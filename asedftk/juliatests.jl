@@ -1,7 +1,9 @@
 using Test
 using JSON
 using LinearAlgebra
-include("dftk_environment/run_calculation.jl")
+using Unitful
+using UnitfulAtomic
+include("run_calculation.jl")
 
 @testset "Basic LDA basis construction" begin
     state      = load_state("mg.json")
@@ -12,9 +14,9 @@ include("dftk_environment/run_calculation.jl")
     basis = get_dftk_basis(parameters, state["extra"])
 
     lattice = basis.model.lattice
-    @test lattice[:, 1] ≈ DFTK.units.Ǎ * [3.21, 0.0, 0.0]
-    @test lattice[:, 2] ≈ DFTK.units.Ǎ * [-1.605, 2.7799415461480477, 0.0]
-    @test lattice[:, 3] ≈ DFTK.units.Ǎ * [0.0, 0.0, 5.21304]
+    @test lattice[:, 1] ≈ austrip(1u"Å") * [3.21, 0.0, 0.0]
+    @test lattice[:, 2] ≈ austrip(1u"Å") * [-1.605, 2.7799415461480477, 0.0]
+    @test lattice[:, 3] ≈ austrip(1u"Å") * [0.0, 0.0, 5.21304]
 
     atoms = basis.model.atoms
     @test length(atoms) == 1
@@ -33,7 +35,7 @@ include("dftk_environment/run_calculation.jl")
     @test only(xcterm.functionals) == :lda_xc_teter93
 
     @test length(basis.kpoints) == 4
-    @test basis.Ecut ≈ 300 * DFTK.units.eV atol=1e-8
+    @test basis.Ecut ≈ 300 * austrip(1u"eV") atol=1e-8
 end
 
 @testset "PBE semicore basis construction" begin
@@ -52,7 +54,7 @@ end
     @test atoms[1][1].psp.identifier == "hgh/pbe/mg-q10.hgh"
     @test atoms[1][1].psp.Zion == 10
 
-    @test basis.model.temperature ≈ 10 * DFTK.units.eV atol=1e-8
+    @test basis.model.temperature ≈ 10 * austrip(1u"eV") atol=1e-8
     @test basis.model.smearing isa DFTK.Smearing.Gaussian
     @test basis.model.spin_polarization == :none
 
@@ -62,7 +64,7 @@ end
     @test xcterm.functionals[2] == :gga_c_pbe
 
     kgrid = DFTK.kgrid_size_from_minimal_spacing(basis.model.lattice,
-                                                 1 / 3.333DFTK.units.Ǎ)
+                                                 1 / 3.333austrip(1u"Å"))
     kcoords, ksymops = bzmesh_ir_wedge(kgrid, basis.model.symmetries)
     @test kcoords ≈ [kpt.coordinate for kpt in basis.kpoints]
 end
@@ -76,7 +78,7 @@ end
                       "smearing" => ("Fermi-Dirac", 5))
     basis = get_dftk_basis(parameters, state["extra"])
 
-    @test basis.model.temperature ≈ 5 * DFTK.units.eV atol=1e-8
+    @test basis.model.temperature ≈ 5 * austrip(1u"eV") atol=1e-8
     @test basis.model.smearing isa DFTK.Smearing.FermiDirac
     @test basis.model.spin_polarization == :none
 
@@ -111,15 +113,15 @@ end
 
 @testset "Test smearing options" begin
     smearingoptions = [
-        (ase=("Fermi-Dirac", 10), temperature=10 * DFTK.units.eV,
+        (ase=("Fermi-Dirac", 10), temperature=10 * austrip(1u"eV"),
          smearing=DFTK.Smearing.FermiDirac),
-        (ase=("Gaussian", 5), temperature=5 * DFTK.units.eV,
+        (ase=("Gaussian", 5), temperature=5 * austrip(1u"eV"),
          smearing=DFTK.Smearing.Gaussian),
-        (ase=("Methfessel-Paxton", 5, 0), temperature=5 * DFTK.units.eV,
+        (ase=("Methfessel-Paxton", 5, 0), temperature=5 * austrip(1u"eV"),
          smearing=DFTK.Smearing.Gaussian),
-        (ase=("Methfessel-Paxton", 5, 1), temperature=5 * DFTK.units.eV,
+        (ase=("Methfessel-Paxton", 5, 1), temperature=5 * austrip(1u"eV"),
          smearing=DFTK.Smearing.MethfesselPaxton1),
-        (ase=("Methfessel-Paxton", 5, 2), temperature=5 * DFTK.units.eV,
+        (ase=("Methfessel-Paxton", 5, 2), temperature=5 * austrip(1u"eV"),
          smearing=DFTK.Smearing.MethfesselPaxton2),
     ]
 

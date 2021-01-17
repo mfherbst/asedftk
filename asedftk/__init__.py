@@ -82,8 +82,7 @@ def update(always_run=True):
 def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
     check_julia_version()
     update(always_run=False)
-    script = os.path.join(os.path.dirname(__file__),
-                          "dftk_environment", "run_calculation.jl")
+    script = os.path.join(os.path.dirname(__file__), "run_calculation.jl")
     logfile = os.path.splitext(inputfile)[0] + ".log"
     if n_threads is None:
         try:
