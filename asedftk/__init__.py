@@ -5,6 +5,7 @@ __author__ = ["Michael F. Herbst"]
 import io
 import os
 import json
+import datetime
 import subprocess
 
 import ase.io
@@ -79,9 +80,13 @@ def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
         raise NotImplementedError("MPI")
     else:
         try:
-            with open(logfile, "w") as fp:
+            with open(logfile, "a") as fp:
+                fp.write(f"#\n#--  {datetime.datetime.now()}\n#\n")
+                fp.flush()
                 julia(*["-t", str(n_threads), script, *properties, inputfile],
                       stderr=subprocess.STDOUT, stdout=fp)
+                fp.flush()
+                fp.write("\n")
         except subprocess.CalledProcessError:
             msg = f"DFTK calculation failed. See logfile {logfile} for details."
             if "CI" in os.environ:
