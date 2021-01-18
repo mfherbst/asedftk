@@ -15,14 +15,14 @@ setup(
     long_description_content_type="text/markdown",
     keywords=[
         "density-functional", "theory", "DFT", "computational", "chemistry",
-        "quantum", "materials", "science", "electronic", "structure", "ab-initio",
-        "pseudopotential", "analysis", "ASE", "DFTK"
+        "quantum", "materials", "science", "electronic", "structure",
+        "ab-initio", "pseudopotential", "analysis", "ASE", "DFTK"
     ],
     #
     author="Michael F. Herbst",
     author_email="info@michael-herbst.com",
     license="MIT",
-    url="https://github.com/mfherbst/ase-dftk",
+    url="https://github.com/mfherbst/asedftk",
     #
     version=__version__,
     classifiers=[
@@ -37,13 +37,13 @@ setup(
     ],
     #
     packages=["asedftk"],
-    package_data={"asedftk": ["calculator.jl"]},
+    package_data={"asedftk": ["dftk_environment/run_calculation.jl",
+                              "dftk_environment/Project.toml",
+                              "juliatests.jl"]},
     zip_safe=False,
     python_requires=">=3.6",
     install_requires=[
         "ase>=3",
-        "julia>=0.5",
         "numpy>=1.14",
-        "pymatgen>=2019.9.16"
     ],
 )

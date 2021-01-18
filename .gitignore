@@ -7,8 +7,6 @@
 *.pyc
 /build
 *.o
-/libadcc.*.so
-/libadcc.*.dylib
 /dist
 *.egg-info
 /.eggs

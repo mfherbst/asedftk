@@ -30,7 +30,7 @@ and a performance on the same order as established packages in the field.
 See [dftk.org](https://dftk.org) and the [DFTK documentation](https://juliamolsim.github.io/DFTK.jl/dev/) for more details.
 
 ## Installation
-See the [installation instructions](https://github.com/mfherbst/asedftk/blob/master/docs/installation.md).
+See the [asedftk instructions](https://github.com/mfherbst/asedftk/blob/master/docs/asedftk.md).
 
 ## Basic usage
 `asedftk.DFTK` is basically a class wrapping around DFTK and making it an
