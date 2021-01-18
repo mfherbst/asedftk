@@ -52,7 +52,9 @@ def check_julia_version(min_version="1.5.0"):
 
 
 def get_mpiexecjl():
-    return julia("-E", 'joinpath(DEPOT_PATH[1], "bin", "mpiexecjl")')
+    # XXX More flexible is to use 'joinpath(DEPOT_PATH[1], "bin", "mpiexecjl")',
+    # which is used by MPI to determine the install location.
+    return os.path.join(os.path.expanduser("~"), ".julia", "bin", "mpiexecjl")
 
 
 def update(always_run=True):
@@ -73,10 +75,9 @@ def update(always_run=True):
     julia("-e", "import Pkg; Pkg.instantiate(); Pkg.update(); Pkg.precompile()")
     open(updated_file, "w").close()
 
-    mpiexecjl = get_mpiexecjl()
-    if not os.path.isfile(mpiexecjl):
+    if not os.path.isfile(get_mpiexecjl()):
         julia("-e", "import MPI; MPI.install_mpiexecjl(verbose=true)")
-        assert os.path.isfile(mpiexecjl)
+        assert os.path.isfile(get_mpiexecjl())
 
 
 def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
