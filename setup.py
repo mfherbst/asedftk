@@ -37,7 +37,7 @@ setup(
     ],
     #
     packages=["asedftk"],
-    package_data={"asedftk": ["dftk_environment/run_calculation.jl",
+    package_data={"asedftk": ["run_calculation.jl",
                               "dftk_environment/Project.toml",
                               "juliatests.jl"]},
     zip_safe=False,
