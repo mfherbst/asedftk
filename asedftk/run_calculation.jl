@@ -11,7 +11,6 @@ function setup()
     else
         DFTK.setup_threading()
     end
-    DFTK.mpi_master() || (redirect_stdout(); redirect_stderr())
 end
 
 inputerror(parameters, p) = error("Unknown value to parameter $p: $(get(parameters, p, ""))")
@@ -127,15 +126,33 @@ end
 function get_dftk_scfres(parameters, extra; basis=get_dftk_basis(parameters, extra))
     mixing = get_dftk_mixing(parameters, extra; basis=basis)
 
-    extraargs = ()
+    n_bands = DFTK.default_n_bands(basis.model)
     if !isnothing(parameters["nbands"])
-        extraargs = (n_bands=parameters["nbands"], )
+        n_bands = parameters["nbands"]
+    end
+
+    if mpi_master()
+        println()
+        println("temperature     = $(basis.model.temperature)")
+        println("smearing        = $(basis.model.smearing)")
+        println("Ecut            = $(basis.Ecut)")
+        println("fft_size        = $(basis.fft_size)")
+        println("kgrid           = $(basis.kgrid)")
+        println("kshift          = $(basis.kshift)")
+        println("n_irreducible_k = $(sum(length, basis.krange_allprocs))")
+        println("n_electr        = $(basis.model.n_electrons)")
+        println()
+        println("mixing          = $mixing")
+        println("n_bands         = $n_bands")
+        println()
+        flush(stdout)
     end
 
     callback = DFTK.ScfSaveCheckpoints(extra["checkpointfile"]) ∘ DFTK.ScfDefaultCallback()
     self_consistent_field(basis; tol=parameters["scftol"], callback=callback,
-                          mixing=mixing, extraargs...)
+                          mixing=mixing, n_bands=n_bands)
 end
+
 
 function parse_json_array(data::Dict)
     # Simplistic parser for ndarrays as they are stored in ASE json files
@@ -160,7 +177,7 @@ function load_state(file)
     else
         str = nothing
     end
-    MPI.bcast(str, 0, MPI.COMM_WORLD)
+    str = MPI.bcast(str, 0, MPI.COMM_WORLD)
     res = JSON.parse(str)
 
     # Parse atoms json

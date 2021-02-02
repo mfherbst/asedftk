@@ -128,7 +128,8 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
   Set this to a value between `1` and the number of irreducible k-Points.
   See the [DFTK parallelization documentation](https://juliamolsim.github.io/DFTK.jl/stable/guide/parallelization/) for details.
 - **n_threads**: Number of Julia threads to employ when running DFTK.
-  Typically the best setting is to use only one thread (the default).
+  Typically the best performance is obtained by using only one thread (the default)
+  and increasing `n_mpi` instead.
   See the [DFTK parallelization documentation](https://juliamolsim.github.io/DFTK.jl/stable/guide/parallelization/) for details.
 
 
