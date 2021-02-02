@@ -1,10 +1,7 @@
-__version__ = "0.2.2"
-__license__ = "MIT"
-__author__ = ["Michael F. Herbst"]
-
 import io
 import os
 import json
+import socket
 import datetime
 import subprocess
 
@@ -14,6 +11,9 @@ from ase.calculators.calculator import (CalculationFailed, Calculator,
                                         CalculatorSetupError, Parameters,
                                         all_changes, register_calculator_class)
 
+__version__ = "0.2.2"
+__license__ = "MIT"
+__author__ = "Michael F. Herbst"
 __all__ = ["DFTK", "update"]
 
 
@@ -25,8 +25,8 @@ def environment():
 def julia(*args, n_mpi=1, **kwargs):
     mpiargs = []
     if n_mpi > 1:
-        raise NotImplementedError("MPI not yet implemented. Please select n_mpi=1.")
         mpiargs = [get_mpiexecjl(), "--project=" + environment(), "-np", str(n_mpi)]
+        args = ["--compiled-modules=no", *args]
 
     julia_exe = os.environ.get("JULIA", "julia")
     try:
@@ -47,7 +47,7 @@ def check_julia_version(min_version="1.5.0"):
     except subprocess.CalledProcessError:
         raise RuntimeError(
             f"Julia version below minimal version {min_version}. "
-            "Please upgrade."
+            "Please upgrade julia from https://julialang.org/downloads/."
         )
 
 
@@ -93,7 +93,7 @@ def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
 
     try:
         with open(logfile, "a") as fp:
-            fp.write(f"#\n#--  {datetime.datetime.now()}\n#\n")
+            fp.write(f"#\n#--  {socket.gethostname()}  {datetime.datetime.now()}\n#\n")
             fp.flush()
             julia(*["-t", str(n_threads), script, *properties, inputfile],
                   n_mpi=n_mpi, stderr=subprocess.STDOUT, stdout=fp)
@@ -187,8 +187,8 @@ class DFTK(Calculator):
                           system_changes=system_changes)
 
         # Write input file
-        inputfile = self.label + ".json"
-        self.write()
+        inputfile = os.path.abspath(self.label + ".json")
+        self.write(label=self.label)
 
         # Run DFTK
         n_threads = self.parameters["n_threads"]
