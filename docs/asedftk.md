@@ -132,6 +132,11 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
   and increasing `n_mpi` instead.
   See the [DFTK parallelization documentation](https://juliamolsim.github.io/DFTK.jl/stable/guide/parallelization/) for details.
 
+## Environment variables
+Some advanced customisation of asedftk is possible via environment variables:
+- `JULIA`: Name of the `julia` binary, or full path to it
+- `ASEDFTK_DFTK_ENVIRONMENT`: Custom environment location to use for running julia,
+  see section below.
 
 ## Custom Julia environment for asedftk
 If you want to employ a custom Julia environment in combination with asedftk,

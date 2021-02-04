@@ -187,7 +187,9 @@ function load_state(file)
     end
     atoms_id = string(atoms_json["ids"][end])
 
-    lattice_Ang   = parse_json_array(atoms_json[atoms_id]["cell"]["array"])
+    cell        = atoms_json[atoms_id]["cell"]
+    lattice_Ang = parse_json_array(get(cell, "array", cell))
+
     positions_Ang = parse_json_array(atoms_json[atoms_id]["positions"])
     numbers       = parse_json_array(atoms_json[atoms_id]["numbers"])
 
@@ -276,5 +278,6 @@ function main()
     setup()
     run_calculation(ARGS[1:end-1], ARGS[end])
 end
+
 
 (abspath(PROGRAM_FILE) == @__FILE__) && main()

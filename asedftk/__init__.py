@@ -1,11 +1,13 @@
 import io
 import os
 import json
+import shutil
 import socket
 import datetime
 import subprocess
 
 import ase.io
+import ase.build
 
 from ase.calculators.calculator import (CalculationFailed, Calculator,
                                         CalculatorSetupError, Parameters,
@@ -14,7 +16,7 @@ from ase.calculators.calculator import (CalculationFailed, Calculator,
 __version__ = "0.2.2"
 __license__ = "MIT"
 __author__ = "Michael F. Herbst"
-__all__ = ["DFTK", "update"]
+__all__ = ["DFTK", "update", "build_sysimage", "remove_sysimage"]
 
 
 def environment():
@@ -22,7 +24,23 @@ def environment():
     return os.environ.get("ASEDFTK_DFTK_ENVIRONMENT", dftk_environment)
 
 
-def julia(*args, n_mpi=1, **kwargs):
+def mpiexecjl():
+    # XXX More flexible is to use 'joinpath(DEPOT_PATH[1], "bin", "mpiexecjl")',
+    # which is used by MPI to determine the install location.
+    return os.path.join(os.path.expanduser("~"), ".julia", "bin", "mpiexecjl")
+
+
+def sysimagepath():
+    return os.path.join(environment(), "sysimage.so")
+
+
+def julia(*args, n_mpi=1, sysimage=True, **kwargs):
+    if sysimage:
+        if sysimage is True:
+            sysimage = sysimagepath()
+        if os.path.isfile(sysimage):
+            args = ["--sysimage", sysimage, *args]
+
     mpiargs = []
     if n_mpi > 1:
         mpiargs = [get_mpiexecjl(), "--project=" + environment(), "-np", str(n_mpi)]
@@ -43,7 +61,8 @@ def julia(*args, n_mpi=1, **kwargs):
 
 def check_julia_version(min_version="1.5.0"):
     try:
-        return julia("-e", f'VERSION < v"{min_version}" && Sys.exit(1)')
+        return julia("-e", f'VERSION < v"{min_version}" && Sys.exit(1)',
+                     sysimage=False)
     except subprocess.CalledProcessError:
         raise RuntimeError(
             f"Julia version below minimal version {min_version}. "
@@ -51,10 +70,43 @@ def check_julia_version(min_version="1.5.0"):
         )
 
 
-def get_mpiexecjl():
-    # XXX More flexible is to use 'joinpath(DEPOT_PATH[1], "bin", "mpiexecjl")',
-    # which is used by MPI to determine the install location.
-    return os.path.join(os.path.expanduser("~"), ".julia", "bin", "mpiexecjl")
+def build_sysimage():
+    """
+    Build a custom sysimage for the current julia version and store it for use with
+    asedftk. This greatly reduces latency for calculations with asedftk by
+    compiling a large part of DFTK into a shared library. This has a few caveats,
+    see the asedftk documentation. This feature is currently experimental and may
+    not work for you. In case of issues just remove the generated sysimage again
+    using `remove_sysimage()`. In this case please file an issue on github to allow
+    us to improve support.
+    """
+    import tempfile
+
+    old = os.getcwd()
+    with tempfile.TemporaryDirectory() as tempdir:
+        try:
+            os.chdir(tempdir)
+            precompilefile = os.path.join(os.path.dirname(__file__),
+                                          "precompile.jl")
+            julia("-e", f"""
+                using PackageCompiler;
+                create_sysimage([:DFTK, :JLD2, :JSON], sysimage_path="sysimage.so",
+                                precompile_execution_file="{precompilefile}")
+            """, sysimage=False)
+
+            if os.path.isfile(sysimagepath()):
+                os.unlink(sysimagepath())
+            shutil.move("sysimage.so", sysimagepath())
+        finally:
+            os.chdir(old)
+
+
+def remove_sysimage():
+    """
+    Remove a sysimage created previously with `build_sysimage()`
+    """
+    if os.path.isfile(sysimagepath()):
+        os.unlink(sysimagepath())
 
 
 def update(always_run=True):
@@ -65,19 +117,31 @@ def update(always_run=True):
     project_file = os.path.join(environment(), "Project.toml")
 
     # Update file is older than Project file
-    needs_update = (not os.path.isfile(updated_file)
-                    or os.stat(updated_file).st_mtime < os.stat(project_file).st_mtime)
+    needs_update = (
+        not os.path.isfile(updated_file)
+        or os.stat(updated_file).st_mtime < os.stat(project_file).st_mtime
+    )
 
     if not needs_update and not always_run:
         return
 
     check_julia_version()
-    julia("-e", "import Pkg; Pkg.instantiate(); Pkg.update(); Pkg.precompile()")
+    julia("-e", "import Pkg; Pkg.update(); Pkg.instantiate(); Pkg.precompile()",
+          sysimage=False)
     open(updated_file, "w").close()
 
-    if not os.path.isfile(get_mpiexecjl()):
+    if os.path.isfile(sysimagepath()):
+        try:
+            remove_sysimage()
+            build_sysimage()
+        except subprocess.CalledProcessError as e:
+            print(e)
+            print("Problems building updated sysimage. You can retry manually "
+                  "using 'asedftk.build_sysimage()'.")
+
+    if not os.path.isfile(mpiexecjl()):
         julia("-e", "import MPI; MPI.install_mpiexecjl(verbose=true)")
-        assert os.path.isfile(get_mpiexecjl())
+        assert os.path.isfile(mpiexecjl())
 
 
 def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
@@ -85,11 +149,6 @@ def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
     update(always_run=False)
     script = os.path.join(os.path.dirname(__file__), "run_calculation.jl")
     logfile = os.path.splitext(inputfile)[0] + ".log"
-    if n_threads is None:
-        try:
-            n_threads = int(os.environ.get("JULIA_NUM_THREADS", "1"))
-        except ValueError:
-            n_threads = 1
 
     try:
         with open(logfile, "a") as fp:
@@ -123,7 +182,7 @@ class DFTK(Calculator):
             "ecut": 400,
             "mixing": None,
             "n_mpi": 1,
-            "n_threads": None,
+            "n_threads": 1,
         }
         self.scfres = label + ".scfres.jld2"
         super().__init__(label=label, atoms=atoms, **kwargs)
