@@ -130,21 +130,23 @@ def update(always_run=True):
         return
 
     check_julia_version()
+    print("Updating Julia environment ...")
     julia("-e", "import Pkg; Pkg.update(); Pkg.instantiate(); Pkg.precompile()",
           sysimage=False)
     open(updated_file, "w").close()
 
+    if not os.path.isfile(mpiexecjl()):
+        julia("-e", "import MPI; MPI.install_mpiexecjl(verbose=true)")
+        assert os.path.isfile(mpiexecjl())
+
     if os.path.isfile(sysimagepath()):
+        print("Updating sysimage ...")
         try:
             build_sysimage()
         except subprocess.CalledProcessError as e:
             print(e)
             print("Problems building updated sysimage. You can retry manually "
                   "using 'asedftk.build_sysimage()'.")
-
-    if not os.path.isfile(mpiexecjl()):
-        julia("-e", "import MPI; MPI.install_mpiexecjl(verbose=true)")
-        assert os.path.isfile(mpiexecjl())
 
 
 def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
