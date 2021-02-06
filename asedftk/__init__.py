@@ -82,6 +82,9 @@ def build_sysimage():
     """
     import tempfile
 
+    # Install missing packages, if needed:
+    update(always_run=False)
+
     old = os.getcwd()
     with tempfile.TemporaryDirectory() as tempdir:
         try:
@@ -133,7 +136,6 @@ def update(always_run=True):
 
     if os.path.isfile(sysimagepath()):
         try:
-            remove_sysimage()
             build_sysimage()
         except subprocess.CalledProcessError as e:
             print(e)
