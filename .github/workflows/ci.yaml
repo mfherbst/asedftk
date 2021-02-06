@@ -34,5 +34,8 @@ jobs:
         run: |
           pip3 install -r requirements.txt
           pip3 install pytest
+      - name: Build sysimage
+        run: |
+          python -c 'import asedftk; asedftk.build_sysimage()'
       - name: Run pytest tests
         run: python -m pytest
