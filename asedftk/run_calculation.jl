@@ -105,9 +105,9 @@ function get_dftk_basis(parameters, extra; model=get_dftk_model(parameters, extr
     end
 
     # Convert ecut to Hartree
-    Ecut = parameters["ecut"] * u"eV"
+    Ecut = austrip(parameters["ecut"] * u"eV")
     if isnothing(kgrid)
-        PlaneWaveBasis(model, austrip(Ecut), kcoords, ksymops)
+        PlaneWaveBasis(model, Ecut, kcoords, ksymops)
     else
         PlaneWaveBasis(model, Ecut, kgrid=kgrid, kshift=kshift)
     end
@@ -187,7 +187,9 @@ function load_state(file)
     end
     atoms_id = string(atoms_json["ids"][end])
 
-    lattice_Ang   = parse_json_array(atoms_json[atoms_id]["cell"]["array"])
+    cell        = atoms_json[atoms_id]["cell"]
+    lattice_Ang = parse_json_array(get(cell, "array", cell))
+
     positions_Ang = parse_json_array(atoms_json[atoms_id]["positions"])
     numbers       = parse_json_array(atoms_json[atoms_id]["numbers"])
 
@@ -254,9 +256,9 @@ function run_calculation(properties::AbstractArray, statefile::AbstractString)
     scfres = load_scfres(state["scfres"])
 
     state["results"]["energy"] = ustrip(auconvert(u"eV", scfres.energies.total))
-    if "forces" in properties
-        # TODO If the calculation fails, ASE expects an
-        #      calculator.CalculationFailed exception
+
+    # For now always compute forces, since it's pretty useful (and cheap)
+    begin  # if "forces" in properties
         forces = compute_forces_cart(scfres)
 
         # DFTK has forces as Hartree over fractional coordinates
@@ -276,5 +278,6 @@ function main()
     setup()
     run_calculation(ARGS[1:end-1], ARGS[end])
 end
+
 
 (abspath(PROGRAM_FILE) == @__FILE__) && main()

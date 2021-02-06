@@ -18,9 +18,24 @@ which allows to directly employ DFTK inside ASE workflows.
    Note: You can also use `pip` if you are managing your python packages
    with anaconda (`conda install pip` followed by above command), but it
    is not recommended to do this in the root anaconda environment.
+1. *(optionally, but recommended)* Precompille DFTK into a custom Julia sysimage
+   for asedftk:
+   ```
+   python -c "import asedftk; asedftk.build_sysimage()"
+   ```
+   While this step is not needed for asedftk to function, it is highly recommended
+   as it greatly reduces the DFTK's latency by compiling important parts of DFTK
+   and storing them in binary form on disk as a "sysimage".
+   This saves a lot on the just-in-time compilation time of DFTK and therefore
+   has noticable impact especially for smaller calculations.  
+   **Note:** This feature is still experimental and might not work for all setups.
+   If you encounter problems either when building the sysimage or when attempting
+   to use it (can be everything from an error to a segfault), you can always
+   revert it by removing the sysimage (`asedftk.remove_sysimage()`).
 
-This will automatically install DFTK inside a separate Julia environment
-private to asedftk. Typically this DFTK version will be updated as needed.
+As part of the installation DFTK will be installed automatically
+inside a separate Julia environment, which is private to asedftk.
+Typically this DFTK version will be updated as needed.
 In case you need to do the update manually at some point, simply run
 `asedftk.update()`.
 
@@ -132,6 +147,11 @@ in [calculator.jl](https://github.com/mfherbst/asedftk/blob/master/asedftk/calcu
   and increasing `n_mpi` instead.
   See the [DFTK parallelization documentation](https://juliamolsim.github.io/DFTK.jl/stable/guide/parallelization/) for details.
 
+## Environment variables
+Some advanced customisation of asedftk is possible via environment variables:
+- `JULIA`: Name of the `julia` binary, or full path to it
+- `ASEDFTK_DFTK_ENVIRONMENT`: Custom environment location to use for running julia,
+  see section below.
 
 ## Custom Julia environment for asedftk
 If you want to employ a custom Julia environment in combination with asedftk,
