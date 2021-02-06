@@ -38,8 +38,9 @@ setup(
     #
     packages=["asedftk"],
     package_data={"asedftk": ["run_calculation.jl",
-                              "dftk_environment/Project.toml",
-                              "juliatests.jl"]},
+                              "juliatests.jl",
+                              "precompile.jl",
+                              "dftk_environment/Project.toml"]},
     zip_safe=False,
     python_requires=">=3.6",
     install_requires=[
