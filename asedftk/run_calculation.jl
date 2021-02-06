@@ -105,9 +105,9 @@ function get_dftk_basis(parameters, extra; model=get_dftk_model(parameters, extr
     end
 
     # Convert ecut to Hartree
-    Ecut = parameters["ecut"] * u"eV"
+    Ecut = austrip(parameters["ecut"] * u"eV")
     if isnothing(kgrid)
-        PlaneWaveBasis(model, austrip(Ecut), kcoords, ksymops)
+        PlaneWaveBasis(model, Ecut, kcoords, ksymops)
     else
         PlaneWaveBasis(model, Ecut, kgrid=kgrid, kshift=kshift)
     end
@@ -256,9 +256,9 @@ function run_calculation(properties::AbstractArray, statefile::AbstractString)
     scfres = load_scfres(state["scfres"])
 
     state["results"]["energy"] = ustrip(auconvert(u"eV", scfres.energies.total))
-    if "forces" in properties
-        # TODO If the calculation fails, ASE expects an
-        #      calculator.CalculationFailed exception
+
+    # For now always compute forces, since it's pretty useful (and cheap)
+    begin  # if "forces" in properties
         forces = compute_forces_cart(scfres)
 
         # DFTK has forces as Hartree over fractional coordinates
