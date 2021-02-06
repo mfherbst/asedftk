@@ -43,7 +43,7 @@ def julia(*args, n_mpi=1, sysimage=True, **kwargs):
 
     mpiargs = []
     if n_mpi > 1:
-        mpiargs = [get_mpiexecjl(), "--project=" + environment(), "-np", str(n_mpi)]
+        mpiargs = [mpiexecjl(), "--project=" + environment(), "-np", str(n_mpi)]
         args = ["--compiled-modules=no", *args]
 
     julia_exe = os.environ.get("JULIA", "julia")
@@ -155,7 +155,9 @@ def run_calculation(properties, inputfile, n_threads=1, n_mpi=1):
 
     try:
         with open(logfile, "a") as fp:
-            fp.write(f"#\n#--  {socket.gethostname()}  {datetime.datetime.now()}\n#\n")
+            fp.write("#\n")
+            fp.write(f"#--  {socket.gethostname()}  {datetime.datetime.now()}\n")
+            fp.write("#\n")
             fp.flush()
             julia(*["-t", str(n_threads), script, *properties, inputfile],
                   n_mpi=n_mpi, stderr=subprocess.STDOUT, stdout=fp)
