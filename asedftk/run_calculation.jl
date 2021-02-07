@@ -1,4 +1,4 @@
-using JSON
+using JSON3
 using DFTK
 using JLD2
 using MPI
@@ -154,7 +154,7 @@ function get_dftk_scfres(parameters, extra; basis=get_dftk_basis(parameters, ext
 end
 
 
-function parse_json_array(data::Dict)
+function parse_json_array(data::AbstractDict)
     # Simplistic parser for ndarrays as they are stored in ASE json files
     shape, type, values = data["__ndarray__"]
     shape = reverse(Int.(shape))  # row-major -> column-major
@@ -178,10 +178,10 @@ function load_state(file)
         str = nothing
     end
     str = MPI.bcast(str, 0, MPI.COMM_WORLD)
-    res = JSON.parse(str)
+    res = JSON3.read(str)
 
     # Parse atoms json
-    atoms_json = JSON.parse(res["atoms"])
+    atoms_json = JSON3.read(res["atoms"])
     if length(atoms_json["ids"]) != 1
         @warn "Only parsing last atoms object in json. Ignoring all others"
     end
@@ -237,7 +237,7 @@ function save_state(file, state)
     )
     if DFTK.mpi_master()
         open(file, "w") do fp
-            JSON.print(fp, save_dict)
+            JSON3.write(fp, save_dict)
         end
     end
     save_dict

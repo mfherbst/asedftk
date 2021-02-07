@@ -93,7 +93,7 @@ def build_sysimage():
                                           "precompile.jl")
             julia("-e", f"""
                 using PackageCompiler;
-                create_sysimage([:DFTK, :JLD2, :JSON],
+                create_sysimage([:DFTK, :JLD2, :JSON3],
                 sysimage_path="sysimage.so",
                 precompile_execution_file="{precompilefile}")
             """, sysimage=False)

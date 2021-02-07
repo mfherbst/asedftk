@@ -1,6 +1,6 @@
 using DFTK
 using JLD2
-using JSON
+using JSON3
 
 # DFTK
 setup_threading()
@@ -20,4 +20,4 @@ scfres = self_consistent_field(basis, tol=1e-2, callback=callback, mixing=Kerker
 compute_forces_cart(scfres)
 
 # JSON
-JSON.parse(JSON.json(Dict("a" => 1.0)))
+JSON3.read(JSON3.write(Dict("a" => 1.0)))["a"]
