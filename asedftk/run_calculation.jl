@@ -19,18 +19,18 @@ inputerror(parameters, p) = error("Unknown value to parameter $p: $(get(paramete
 function get_dftk_model(parameters, extra)
     # Parse psp and DFT functional parameters
     functionals = [:lda_xc_teter93]
-    if lowercase(parameters["xc"]) == "lda"
+    if lowercase(parameters[:xc]) == "lda"
         psp_functional = "lda"
         functionals = [:lda_xc_teter93]
-    elseif lowercase(parameters["xc"]) == "pbe"
+    elseif lowercase(parameters[:xc]) == "pbe"
         psp_functional = "pbe"
         functionals = [:gga_x_pbe, :gga_c_pbe]
     else
         inputerror(parameters, "xc")
     end
 
-    if !isnothing(parameters["functionals"])
-        funs = parameters["functionals"]
+    if !isnothing(parameters[:functionals])
+        funs = parameters[:functionals]
         if funs isa AbstractArray
             functionals = Symbol.(funs)
         else
@@ -38,10 +38,10 @@ function get_dftk_model(parameters, extra)
         end
     end
 
-    if parameters["pps"] == "hgh"
+    if parameters[:pps] == "hgh"
         psp_family = "hgh"
         psp_core = :fullcore
-    elseif parameters["pps"] == "hgh.k"
+    elseif parameters[:pps] == "hgh.k"
         psp_family = "hgh"
         psp_core = :semicore
     else
@@ -51,8 +51,8 @@ function get_dftk_model(parameters, extra)
     # Parse smearing and temperature
     temperature = 0.0u"eV"
     smearing = nothing
-    if !isnothing(parameters["smearing"])
-        psmear = parameters["smearing"]
+    if !isnothing(parameters[:smearing])
+        psmear = parameters[:smearing]
         if lowercase(psmear[1]) == "fermi-dirac"
             smearing = Smearing.FermiDirac()
         elseif lowercase(psmear[1]) == "gaussian"
@@ -65,8 +65,8 @@ function get_dftk_model(parameters, extra)
         temperature = convert(Float64, psmear[2]) * u"eV"
     end
 
-    if parameters["charge"] != 0.0
-        error("Charged systems not supported in DFTK.")
+    if parameters[:charge] != 0.0
+        error("Charged systems not yet supported in DFTK.")
     end
 
     # TODO This is the place where spin-polarization should be added
@@ -76,16 +76,16 @@ function get_dftk_model(parameters, extra)
     psploader(symbol) = load_psp(symbol, functional=psp_functional,
                                  family=psp_family, core=psp_core)
     atoms = [ElementPsp(element.symbol, psp=psploader(element.symbol)) => positions
-             for (element, positions) in extra["atoms"]]
+             for (element, positions) in extra[:atoms]]
 
-    model_DFT(extra["lattice"], atoms, functionals; temperature=temperature,
+    model_DFT(extra[:lattice], atoms, functionals; temperature=temperature,
               smearing=smearing)
 end
 
 
 function get_dftk_basis(parameters, extra; model=get_dftk_model(parameters, extra))
     # Build kpoint mesh
-    kpts = parameters["kpts"]
+    kpts = parameters[:kpts]
     kgrid = [1, 1, 1]
     kshift = [0, 0, 0]
     if kpts isa Number
@@ -105,7 +105,7 @@ function get_dftk_basis(parameters, extra; model=get_dftk_model(parameters, extr
     end
 
     # Convert ecut to Hartree
-    Ecut = austrip(parameters["ecut"] * u"eV")
+    Ecut = austrip(parameters[:ecut] * u"eV")
     if isnothing(kgrid)
         PlaneWaveBasis(model, Ecut, kcoords, ksymops)
     else
@@ -115,10 +115,10 @@ end
 
 
 function get_dftk_mixing(parameters, extra; basis=get_dftk_basis(parameters, extra))
-    if isnothing(parameters["mixing"])
+    if isnothing(parameters[:mixing])
         basis.model.temperature > 0 ? KerkerMixing() : SimpleMixing(α=0.8)
     else
-        include_string(Main, parameters["mixing"], @__FILE__)
+        include_string(Main, parameters[:mixing], @__FILE__)
     end
 end
 
@@ -127,8 +127,8 @@ function get_dftk_scfres(parameters, extra; basis=get_dftk_basis(parameters, ext
     mixing = get_dftk_mixing(parameters, extra; basis=basis)
 
     n_bands = DFTK.default_n_bands(basis.model)
-    if !isnothing(parameters["nbands"])
-        n_bands = parameters["nbands"]
+    if !isnothing(parameters[:nbands])
+        n_bands = parameters[:nbands]
     end
 
     if mpi_master()
@@ -148,8 +148,8 @@ function get_dftk_scfres(parameters, extra; basis=get_dftk_basis(parameters, ext
         flush(stdout)
     end
 
-    callback = DFTK.ScfSaveCheckpoints(extra["checkpointfile"]) ∘ DFTK.ScfDefaultCallback()
-    self_consistent_field(basis; tol=parameters["scftol"], callback=callback,
+    callback = DFTK.ScfSaveCheckpoints(extra[:checkpointfile]) ∘ DFTK.ScfDefaultCallback()
+    self_consistent_field(basis; tol=parameters[:scftol], callback=callback,
                           mixing=mixing, n_bands=n_bands)
 end
 
@@ -178,10 +178,10 @@ function load_state(file)
         str = nothing
     end
     str = MPI.bcast(str, 0, MPI.COMM_WORLD)
-    res = JSON3.read(str)
+    res = copy(JSON3.read(str))
 
     # Parse atoms json
-    atoms_json = JSON3.read(res["atoms"])
+    atoms_json = JSON3.read(res[:atoms])
     if length(atoms_json["ids"]) != 1
         @warn "Only parsing last atoms object in json. Ignoring all others"
     end
@@ -204,9 +204,9 @@ function load_state(file)
         end
     end
 
-    res["extra"] = Dict{String, Any}()
-    res["extra"]["lattice"]    = lattice_Ang * austrip(1u"Å")
-    res["extra"]["atoms"]      = atoms
+    res[:extra] = Dict{Symbol, Any}()
+    res[:extra][:lattice]    = lattice_Ang * austrip(1u"Å")
+    res[:extra][:atoms]      = atoms
     res
 end
 
@@ -216,8 +216,8 @@ function save_state(file, state)
 
     # Transpose arrays inside results, such that they are written
     # in a predictable order to disk
-    save_results = Dict{String, Any}()
-    for (key, val) in pairs(state["results"])
+    save_results = Dict{Symbol, Any}()
+    for (key, val) in pairs(state[:results])
         if val isa AbstractArray
             if ndims(val) == 2
                 save_results[key] = Vector.(eachrow(val))
@@ -230,10 +230,10 @@ function save_state(file, state)
     end
 
     save_dict = Dict(
-        "parameters" => state["parameters"],
-        "results"    => save_results,
-        "atoms"      => state["atoms"],
-        "scfres"     => state["scfres"],
+        :parameters => state[:parameters],
+        :results    => save_results,
+        :atoms      => state[:atoms],
+        :scfres     => state[:scfres],
     )
     if DFTK.mpi_master()
         open(file, "w") do fp
@@ -246,16 +246,16 @@ end
 
 function run_calculation(properties::AbstractArray, statefile::AbstractString)
     state = load_state(statefile)
-    @assert endswith(state["scfres"], ".scfres.jld2")
-    prefix = state["scfres"][1:end-12]
-    state["extra"]["checkpointfile"] = prefix * ".checkpoint.jld2"
+    @assert endswith(state[:scfres], ".scfres.jld2")
+    prefix = state[:scfres][1:end-12]
+    state[:extra][:checkpointfile] = prefix * ".checkpoint.jld2"
 
-    if !isfile(state["scfres"])
-        save_scfres(state["scfres"], get_dftk_scfres(state["parameters"], state["extra"]))
+    if !isfile(state[:scfres])
+        save_scfres(state[:scfres], get_dftk_scfres(state[:parameters], state[:extra]))
     end
-    scfres = load_scfres(state["scfres"])
+    scfres = load_scfres(state[:scfres])
 
-    state["results"]["energy"] = ustrip(auconvert(u"eV", scfres.energies.total))
+    state[:results][:energy] = ustrip(auconvert(u"eV", scfres.energies.total))
 
     # For now always compute forces, since it's pretty useful (and cheap)
     begin  # if "forces" in properties
@@ -268,7 +268,7 @@ function run_calculation(properties::AbstractArray, statefile::AbstractString)
         for (i, atforce) in enumerate(Iterators.flatten(forces))
             cart_forces[i, :] = @. ustrip(auconvert(u"eV/Å", atforce))
         end
-        state["results"]["forces"] = cart_forces
+        state[:results][:forces] = cart_forces
     end
     save_state(statefile, state)
 end
