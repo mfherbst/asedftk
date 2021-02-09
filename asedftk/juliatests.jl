@@ -4,11 +4,11 @@ include("run_calculation.jl")
 
 @testset "Basic LDA basis construction" begin
     state      = load_state("mg.json")
-    parameters = Dict(state["parameters"]...,
-                      "xc"   => "LDA",
-                      "kpts" => [1, 2, 3],
-                      "ecut" => 300)
-    basis = get_dftk_basis(parameters, state["extra"])
+    parameters = Dict(state[:parameters]...,
+                      :xc   => "LDA",
+                      :kpts => [1, 2, 3],
+                      :ecut => 300)
+    basis = get_dftk_basis(parameters, state[:extra])
 
     lattice = basis.model.lattice
     @test lattice[:, 1] ≈ austrip(1u"Å") * [3.21, 0.0, 0.0]
@@ -37,12 +37,12 @@ end
 
 @testset "PBE semicore basis construction" begin
     state      = load_state("mg.json")
-    parameters = Dict(state["parameters"]...,
-                      "xc"       => "PBE",
-                      "kpts"     => 3.333,
-                      "smearing" => ("Gaussian", 10),
-                      "pps"      => "hgh.k")  # semicore psps
-    basis = get_dftk_basis(parameters, state["extra"])
+    parameters = Dict(state[:parameters]...,
+                      :xc       => "PBE",
+                      :kpts     => 3.333,
+                      :smearing => ("Gaussian", 10),
+                      :pps      => "hgh.k")  # semicore psps
+    basis = get_dftk_basis(parameters, state[:extra])
 
     atoms = basis.model.atoms
     @test length(atoms) == 1
@@ -69,11 +69,11 @@ end
 @testset "Custom functional construction" begin
     kpts = [(0, 0, 0), (0.5, 0.7, 0.3)]
     state      = load_state("mg.json")
-    parameters = Dict(state["parameters"]...,
-                      "xc"       => "PBE",
-                      "kpts"     => kpts,
-                      "smearing" => ("Fermi-Dirac", 5))
-    basis = get_dftk_basis(parameters, state["extra"])
+    parameters = Dict(state[:parameters]...,
+                      :xc       => "PBE",
+                      :kpts     => kpts,
+                      :smearing => ("Fermi-Dirac", 5))
+    basis = get_dftk_basis(parameters, state[:extra])
 
     @test basis.model.temperature ≈ 5 * austrip(1u"eV") atol=1e-8
     @test basis.model.smearing isa DFTK.Smearing.FermiDirac
@@ -100,8 +100,8 @@ end
 
     for params in kpointoptions
         state      = load_state("mg.json")
-        parameters = Dict(state["parameters"]..., "kpts" => params.ase)
-        basis = get_dftk_basis(parameters, state["extra"])
+        parameters = Dict(state[:parameters]..., :kpts => params.ase)
+        basis = get_dftk_basis(parameters, state[:extra])
         @test length(basis.kpoints) == params.length
         @test Float64.(basis.kpoints[1].coordinate) ≈ params.kpt1
         @test Float64.(basis.kpoints[2].coordinate) ≈ params.kpt2
@@ -124,8 +124,8 @@ end
 
     for params in smearingoptions
         state      = load_state("mg.json")
-        parameters = Dict(state["parameters"]..., "smearing" => params.ase)
-        model = get_dftk_model(parameters, state["extra"])
+        parameters = Dict(state[:parameters]..., :smearing => params.ase)
+        model = get_dftk_model(parameters, state[:extra])
         @test model.smearing isa params.smearing
         @test model.temperature ≈ params.temperature atol=1e-8
     end
@@ -148,8 +148,8 @@ end
 
     for params in mixingoptions
         state      = load_state("mg.json")
-        parameters = Dict(state["parameters"]..., "mixing" => params.ase)
-        mixing = get_dftk_mixing(parameters, state["extra"])
+        parameters = Dict(state[:parameters]..., :mixing => params.ase)
+        mixing = get_dftk_mixing(parameters, state[:extra])
         @test (mixing isa params.mixing)
         @test mixing.α == params.α
     end
@@ -166,31 +166,31 @@ end
     FORCES_PBE = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
 
     state = load_state("si.json")
-    state["parameters"] = Dict(state["parameters"]...,
-                               "xc" => "PBE",
-                               "kpts" => (3, 3, 3),
-                               "ecut" => 190,
-                               "scftol" => 1e-4,
-                               "nbands" => 12)
+    state[:parameters] = Dict(state[:parameters]...,
+                               :xc => "PBE",
+                               :kpts => (3, 3, 3),
+                               :ecut => 190,
+                               :scftol => 1e-4,
+                               :nbands => 12)
     save_state(label * ".json", state)
 
-    rm(state["scfres"], force=true)
+    rm(state[:scfres], force=true)
     state = run_calculation(["energies", "forces"], label * ".json")
-    @test state["results"]["energy"] ≈ ENERGY_PBE atol=1e-4 rtol=1e-4
-    @test state["results"]["forces"] ≈ FORCES_PBE atol=1e-2
+    @test state[:results][:energy] ≈ ENERGY_PBE atol=1e-4 rtol=1e-4
+    @test state[:results][:forces] ≈ FORCES_PBE atol=1e-2
 
-    orig_ene    = state["results"]["energy"]
-    orig_forces = state["results"]["forces"]
-    orig_atoms  = state["atoms"]
+    orig_ene    = state[:results][:energy]
+    orig_forces = state[:results][:forces]
+    orig_atoms  = state[:atoms]
 
     save_state(label * ".json", state)
     state = load_state(label * ".json")
 
     # Check we got the old parameters and results back:
-    @test state["parameters"]["xc"]   == "PBE"
-    @test state["parameters"]["kpts"] == [3, 3, 3]
-    @test state["parameters"]["ecut"] == 190
-    @test state["results"]["energy"] ≈ orig_ene
-    @test state["results"]["forces"] ≈ orig_forces
-    @test state["atoms"] == orig_atoms
+    @test state[:parameters][:xc]   == "PBE"
+    @test state[:parameters][:kpts] == [3, 3, 3]
+    @test state[:parameters][:ecut] == 190
+    @test state[:results][:energy] ≈ orig_ene
+    @test state[:results][:forces] ≈ orig_forces
+    @test state[:atoms] == orig_atoms
 end
