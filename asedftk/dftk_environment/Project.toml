@@ -1,7 +1,7 @@
 [deps]
 DFTK = "acf6eb54-70d9-11e9-0013-234b7a5f5337"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
 MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
 PackageCompiler = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
@@ -10,7 +10,7 @@ UnitfulAtomic = "a7773ee8-282e-5fa2-be4e-bd808c38a91a"
 [compat]
 DFTK = "= 0.2.6"
 JLD2 = "0.3"
-JSON = "0.21"
+JSON3 = "1"
 MPI = "0.16"
 PackageCompiler = "1"
 Unitful = "1"
