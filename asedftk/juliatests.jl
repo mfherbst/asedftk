@@ -1,8 +1,5 @@
 using Test
-using JSON
 using LinearAlgebra
-using Unitful
-using UnitfulAtomic
 include("run_calculation.jl")
 
 @testset "Basic LDA basis construction" begin
