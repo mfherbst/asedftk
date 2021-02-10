@@ -5,6 +5,7 @@ import shutil
 import socket
 import datetime
 import subprocess
+import numpy as np
 
 import ase.io
 import ase.build
@@ -206,8 +207,12 @@ class DFTK(Calculator):
         with open(label + ".json", "r") as fp:
             saved_dict = json.load(fp)
         self.parameters = Parameters(saved_dict["parameters"])
-        self.results = saved_dict["results"]
         self.scfres = saved_dict.get("scfres", None)
+        self.results = saved_dict["results"]
+
+        # Some results need to be numpy arrays:
+        for key in ("forces", ):
+            self.results[key] = np.array(self.results[key])
 
         with io.StringIO(saved_dict["atoms"]) as fp:
             self.atoms = ase.io.read(fp, format="json")
