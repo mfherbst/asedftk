@@ -9,7 +9,7 @@ UnitfulAtomic = "a7773ee8-282e-5fa2-be4e-bd808c38a91a"
 
 [compat]
 DFTK = "= 0.2.6"
-JLD2 = "0.3"
+JLD2 = "0.3, 0.4"
 JSON3 = "1"
 MPI = "0.16"
 PackageCompiler = "1"
