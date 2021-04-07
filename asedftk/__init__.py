@@ -14,7 +14,7 @@ from ase.calculators.calculator import (CalculationFailed, Calculator,
                                         CalculatorSetupError, Parameters,
                                         all_changes, register_calculator_class)
 
-__version__ = "0.2.5"
+__version__ = "0.2.6"
 __license__ = "MIT"
 __author__ = "Michael F. Herbst"
 __all__ = ["DFTK", "update", "build_sysimage", "remove_sysimage"]
