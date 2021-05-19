@@ -5,8 +5,8 @@ import shutil
 import socket
 import datetime
 import subprocess
-import numpy as np
 
+import numpy as np
 import ase.io
 import ase.build
 
@@ -223,6 +223,10 @@ class DFTK(Calculator):
         if self.atoms is None:
             raise CalculatorSetupError("An Atoms object must be present "
                                        "in the calculator to use write")
+
+        # Normalise a few parameters, otherwise json serialisation has trouble
+        if isinstance(self.parameters["kpts"], np.ndarray):
+            self.parameters["kpts"] = self.parameters["kpts"].tolist()
 
         with io.StringIO() as fp:
             ase.io.write(fp, self.atoms.copy(), format="json")
